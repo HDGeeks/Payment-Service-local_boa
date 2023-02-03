@@ -32,7 +32,7 @@ class PurchaseWithBOAViewset(ModelViewSet):
                 pay = send_to_boa(amount)
             except Exception as e:
                 return Response(str(e))
-        return Response(pay)
+        return render(request,template_name="abyssinia/index.html")
 
 
 def send_to_boa(amount):
