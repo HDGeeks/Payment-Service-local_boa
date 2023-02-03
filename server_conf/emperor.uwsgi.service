@@ -1,0 +1,9 @@
+[Unit]
+Description=uwsgi emperor for payment service website
+After=network.target
+[Service]
+User=hd
+Restart=always
+ExecStart=/home/hd/pay-telebirr/venv/bin/uwsgi --emperor /home/hd/pay-telebirr/venv/vassals --uid www-data --gid www-data
+[Install]
+WantedBy=multi-user.target
