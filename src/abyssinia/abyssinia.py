@@ -5,6 +5,7 @@ from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 import json
 import environ
+from urllib.parse import urlencode
 
 
 class Abyssinia:
@@ -55,6 +56,7 @@ class Abyssinia:
             "signature": self.sign
 
         }
+    
 
     @staticmethod
     def __sign(pay_load, app_key):
@@ -72,11 +74,14 @@ class Abyssinia:
                     string_a += '&' + key + '=' + value
             string_b = hashlib.sha256(str.encode(string_a)).hexdigest()
             return str(string_b).upper()
+            
+    def result(self):
+        return self.final_body
 
 
     
     def request_params(self):
-        return {"pay_load":self.final_body}
+        return {"pay_load":urlencode(self.final_body)}
        
 
     def send_request(self):
