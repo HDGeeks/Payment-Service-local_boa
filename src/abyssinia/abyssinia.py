@@ -73,6 +73,7 @@ class Abyssinia:
                 else:
                     string_a += '&' + key + '=' + value
             string_b = hashlib.sha256(str.encode(string_a)).hexdigest()
+            print(string_b)
             return str(string_b).upper()
             
     def result(self):
