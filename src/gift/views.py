@@ -1,7 +1,7 @@
 import random
 import string
 import environ
-
+from django.db.models import Sum
 from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
@@ -198,6 +198,8 @@ class GiveGiftArtistViewset(ModelViewSet):
     def list(self, request, *args, **kwargs):
         artist = self.request.query_params.get('artist')
         if artist:
+            if artist == "all":
+                return Response(Gift_Info.objects.values('ArtistId').annotate(total_gift_collected=Sum('gift_amount')).order_by("-total_gift_collected")[:10])
             queryset = Gift_Info.objects.filter(
                 ArtistId=artist)
             queryset = queryset.values("ArtistId", "gift_amount")
@@ -209,18 +211,18 @@ class GiveGiftArtistViewset(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
 
-        current_amount = Gift_Payment_info.objects.filter(
+        current_amount=Gift_Payment_info.objects.filter(
             userId=request.data['userId']).values("payment_amount")[0]["payment_amount"]
 
         if int(request.data['gift_amount']) > current_amount:
             return Response({"message": " You dont xhave enough balance ."})
 
-        new_amount = current_amount - int(request.data['gift_amount'])
+        new_amount=current_amount - int(request.data['gift_amount'])
 
         Gift_Payment_info.objects.filter(userId=request.data['userId']).update(
             payment_amount=new_amount)
 
-        serializer = Gift_info_serializer(data=request.data)
+        serializer=Gift_info_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -229,10 +231,10 @@ class GiveGiftArtistViewset(ModelViewSet):
 
 def send_to_telebirr(amount, nonce, outtrade):
     # Initialise environment variables
-    env = environ.Env()
+    env=environ.Env()
     environ.Env.read_env()
 
-    telebirr = Telebirr(
+    telebirr=Telebirr(
 
         app_id=env("App_ID"),
         app_key=env("App_Key"),
@@ -252,12 +254,12 @@ def send_to_telebirr(amount, nonce, outtrade):
 
 
 def decrypt_response_from_telebirr(message):
-    responded_data = Decrypt(
+    responded_data=Decrypt(
         message=message)
     return responded_data
 
 
 def generate_nonce(length):
-    result_str = ''.join(random.choices(
+    result_str=''.join(random.choices(
         string.ascii_uppercase + string.digits + string.digits, k=length))
     return result_str

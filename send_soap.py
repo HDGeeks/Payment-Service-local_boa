@@ -1,5 +1,5 @@
 import requests
-url = "http://10.180.79.13:30001/payment/services/APIRequestMgrService"
+url = "http://10.180.79.13:10001/payment/services/APIRequestMgrService"
 #headers = {'content-type': 'application/soap+xml'}
 headers = {'content-type': 'text/xml'}
 body = """<?xml version="1.0" encoding="UTF-8"?>
