@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_yasg",
     #'storages',
+    'report_builder',
 
     "core",
     "gift",
@@ -84,6 +85,10 @@ CORS_ALLOW_HEADERS = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+# REPORT_BUILDER_INCLUDE = ['subscription.Subscription_Payment_info',
+#                           'subscription.Subscription,'
+#                           'Subscription.Abstarct']
+REPORT_BUILDER_GLOBAL_EXPORT = True
 
 
 REST_FRAMEWORK = {
@@ -98,6 +103,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 10
 }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
 
 TEMPLATES = [
     {
@@ -106,6 +117,8 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.static',
+                'django.template.context_processors.media',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',

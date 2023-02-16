@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Subscription
+from .models import Subscription,Subscription_Payment_info
 
-# Register your models here.
-admin.register(Subscription)
+
+@admin.register(Subscription, Subscription_Payment_info)
+class Subscription_admin(admin.ModelAdmin):
+    pass
