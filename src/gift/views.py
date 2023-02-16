@@ -1,7 +1,7 @@
 import random
 import string
 import environ
-
+from django.db.models import Sum
 from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
@@ -31,30 +31,24 @@ environ.Env.read_env()
 def notify(request):
 
     if request.method == 'POST':
-        payload=request.body
-        # if not payload:
-        #     return Response("The request object (request.body) is empty .")
-        # else:
-            #payload=request.body
-            # decrypt data
+        payload = request.body
         try:
-
-            decrypted_data = Telebirr.decrypt(public_key= env("Public_Key"), payload=payload)
+            decrypted_data = Telebirr.decrypt(
+                public_key=env("Public_Key"), payload=payload)
         except Exception as e:
             return Response(str(e))
         else:
-
-        
             # get current amount using outtade
             current = Gift_Payment_info.objects.filter(
                 outTradeNo=decrypted_data["outTradeNo"])
-            print(current) 
             # capture the existing amount
             if current.exists():
-                current_amount = current.values("payment_amount")[0]["payment_amount"]
+                current_amount = current.values("payment_amount")[
+                    0]["payment_amount"]
 
                 # perform addition of the current amount with total amount
-                new_amount = current_amount + int(decrypted_data['totalAmount'])
+                new_amount = current_amount + \
+                    int(decrypted_data['totalAmount'])
 
                 # update the row with new info
                 update_data = Gift_Payment_info.objects.filter(
@@ -72,25 +66,25 @@ def notify(request):
         return Response(" only methods get and post allowed .")
 
 
-
-
 @api_view(['GET', 'POST'])
 @csrf_exempt
 def dummy_dec(request):
-    
+
     if request.method == 'POST' or request.method == 'GET':
-        
+
         payload = request.body
-       
-        if payload !="":
+
+        if payload != "":
             try:
-                decrypted_data = Telebirr.decrypt(public_key = env("Public_Key"), payload=payload)
+                decrypted_data = Telebirr.decrypt(
+                    public_key=env("Public_Key"), payload=payload)
             except Exception as e:
                 return Response(str(e))
             else:
                 return Response({"Decrypted_Data": decrypted_data, })
-        
+
     return Response("post method only")
+
 
 class BuyGiftViewSet(ModelViewSet):
     queryset = Gift_Payment_info.objects.all()
@@ -203,7 +197,9 @@ class GiveGiftArtistViewset(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         artist = self.request.query_params.get('artist')
-        if artist is not None:
+        if artist:
+            if artist == "all":
+                return Response(Gift_Info.objects.values('ArtistId').annotate(total_gift_collected=Sum('gift_amount')).order_by("-total_gift_collected")[:10])
             queryset = Gift_Info.objects.filter(
                 ArtistId=artist)
             queryset = queryset.values("ArtistId", "gift_amount")
@@ -215,42 +211,39 @@ class GiveGiftArtistViewset(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
 
-        current_amount = Gift_Payment_info.objects.filter(
+        current_amount=Gift_Payment_info.objects.filter(
             userId=request.data['userId']).values("payment_amount")[0]["payment_amount"]
 
         if int(request.data['gift_amount']) > current_amount:
             return Response({"message": " You dont xhave enough balance ."})
 
-        new_amount = current_amount - int(request.data['gift_amount'])
+        new_amount=current_amount - int(request.data['gift_amount'])
 
         Gift_Payment_info.objects.filter(userId=request.data['userId']).update(
             payment_amount=new_amount)
 
-        serializer = Gift_info_serializer(data=request.data)
+        serializer=Gift_info_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 def send_to_telebirr(amount, nonce, outtrade):
     # Initialise environment variables
-    env = environ.Env()
+    env=environ.Env()
     environ.Env.read_env()
 
+    telebirr=Telebirr(
 
-    telebirr = Telebirr(
-        
-        app_id = env("App_ID"),
-        app_key = env("App_Key"),
-        public_key = env("Public_Key"),
-        notify_url = "https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/gift/notify-url",
-        receive_name = "Zema Multimedia PLC ",
-        return_url = "https://zemamultimedia.com",
-        short_code = env("Short_Code"),
-        subject = "Media content",
+        app_id=env("App_ID"),
+        app_key=env("App_Key"),
+        public_key=env("Public_Key"),
+        notify_url="https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/gift/notify-url",
+        receive_name="Zema Multimedia PLC ",
+        return_url="https://zemamultimedia.com",
+        short_code=env("Short_Code"),
+        subject="Media content",
         timeout_express="30",
         total_amount=amount,
         nonce=nonce,
@@ -261,12 +254,12 @@ def send_to_telebirr(amount, nonce, outtrade):
 
 
 def decrypt_response_from_telebirr(message):
-    responded_data = Decrypt(
+    responded_data=Decrypt(
         message=message)
     return responded_data
 
 
 def generate_nonce(length):
-    result_str = ''.join(random.choices(
+    result_str=''.join(random.choices(
         string.ascii_uppercase + string.digits + string.digits, k=length))
     return result_str
