@@ -8,6 +8,7 @@ from django.core.mail import send_mail
 from rest_framework.decorators import api_view
 import environ
 from datetime import datetime
+from django.db.models import Sum
 
 from gift.models import Gift_Info
 from .telebirrApi import Telebirr
@@ -196,6 +197,26 @@ class PurchasedTracksViewset(ModelViewSet):
 
     serializer_class = Purcahsed_track_serializer
     queryset = Purcahsed_track.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            if user_id == "all_users":
+                return Response(Purcahsed_track.objects.values('userId').annotate(total_amount_per_user=Sum('track_price_amount')))
+            elif user_id == 'total':
+                return Response(Purcahsed_track.objects.aggregate(total_money_from_purchased_tracks=Sum('track_price_amount')))
+            else:
+                per_user = Purcahsed_track.objects.filter(
+                    userId=user_id).values("userId", "trackId", "track_price_amount", "created_at")
+                # total_per_user = Purcahsed_track.objects.filter(
+                #     userId=user_id).annotate(sum_per_user=Sum('track_price_amount'))
+                total_per_user = per_user.aggregate(
+                    total_per_user=Sum("track_price_amount"))
+                return Response({'per_user': per_user, 'total_per_this_user':total_per_user},status=status.HTTP_200_OK)
+            
+        else:
+            return Response(Purcahsed_track.objects.all().values())
+
 
     def create(self, request, *args, **kwargs):
         verify_amount = Payment_info.objects.filter(
