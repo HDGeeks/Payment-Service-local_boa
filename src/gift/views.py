@@ -90,6 +90,15 @@ class BuyGiftViewSet(ModelViewSet):
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            if user_id == "all":
+                return Response(Gift_Payment_info.objects.aggregate(total_coin_for_all_users=Sum('payment_amount')))
+            return Response(Gift_Payment_info.objects.filter(userId=user_id).values("userId", "payment_amount"))
+        else:
+            return Response(Gift_Payment_info.objects.all().values('userId', 'payment_amount'))
+
     def create(self, request, *args, **kwargs):
         if (request.data['payment_method'] != "telebirr"):
             if self.queryset.filter(userId=request.data['userId']).exists():
