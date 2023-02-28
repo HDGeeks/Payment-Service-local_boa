@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "gift",
     "subscription",
     "abyssinia",
+    'super_app',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
