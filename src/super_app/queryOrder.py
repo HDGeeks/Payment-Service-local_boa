@@ -2,7 +2,6 @@ import requests
 from . import applyFabricToken
 import json
 from . import tools
-from . import env
 from . import tools
 
 

@@ -87,6 +87,7 @@ def dummy_dec(request):
 
 
 class BuyGiftViewSet(ModelViewSet):
+    
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 

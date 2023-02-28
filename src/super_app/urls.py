@@ -5,15 +5,13 @@ from .views import SuperappPayViewSet, CheckPaymentViewSet, notify
 
 router = routers.DefaultRouter(trailing_slash=False)
 
-router.register(r'SubscribeWithTelebirr', SuperappPayViewSet,
-                basename='SubscribeWithTelebirr')
-router.register(r'CheckPayment', CheckPaymentViewSet, basename='CheckPayment')
+router.register(r'pay-with-super-app', SuperappPayViewSet,
+                basename='pay-with-super-app')
+router.register(r'check-superapp-payment', CheckPaymentViewSet,
+                basename='check-superapp-payment')
 
 
 urlpatterns = [
-
-    #path("find-user/", findUser, name="find-user"),
-    # path("subscription/", include("router.urls"))
     path("super-app-notify-url", notify, name="super-app-notify-url")
 ]
 

@@ -78,6 +78,7 @@ urlpatterns = [
     path('root/', api_root, name='root'),
     path("payment/", include("telebirr.urls")),
     path("gift/", include("gift.urls")),
+    path("super/", include("super_app.urls")),
     path("tests/", include(router.urls)),
     #path("paypal/", include("paypal.urls")),
     path("subscription/", include("subscription.urls")),

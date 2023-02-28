@@ -29,6 +29,11 @@ def api_root(request, format=None):
         'subscribe-notify-url': reverse('subscribe-notify-url', request=request, format=format),
         'subscribed-users-count': reverse('subscribed-users-count', request=request, format=format),
         'schema-json': reverse('schema-json', request=request, format=format),
+
+        # superapp
+
+        'pay-with-super-app': reverse('pay-with-super-app-list', request=request, format=format),
+        'check-superapp-payment': reverse('check-superapp-payment-list', request=request, format=format),
       
         
       
