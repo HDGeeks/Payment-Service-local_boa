@@ -19,6 +19,7 @@ def api_root(request, format=None):
         'gift-buy-telebirr-list': reverse('buy-gift-telebirr-list', request=request, format=format),
         'gift-payment-info-list': reverse('gift-payment-info-list', request=request, format=format),
         'gift-give-gift-list': reverse('give-gift-list', request=request, format=format),
+        'coin-info-list': reverse('coin-info-list', request=request, format=format),
         'gift-notify': reverse('notify-url', request=request, format=format),
         'gift-dummy-notify-test': reverse('dummy-notify-url', request=request, format=format),
 

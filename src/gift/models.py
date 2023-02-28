@@ -15,12 +15,13 @@ class Abstarct(models.Model):
 
 
 class Gift_Payment_info(Abstarct):
+    
     PAYMENT_STATUS = (
         ("PENDING", "PENDING"),
         ("COMPLETED", "COMPLETED")
 
     )
-    userId = models.CharField(max_length=255, primary_key=True)
+    userId = models.CharField(max_length=255)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)
     payment_method = models.CharField(max_length=255, null=False, blank=True)
     outTradeNo = models.CharField(max_length=255, null=False, blank=True)
@@ -38,6 +39,17 @@ class Gift_Payment_info(Abstarct):
     def __str__(self):
         return f'gift-id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr'
 
+class Coin(Abstarct):
+
+    userId = models.CharField(
+        max_length=255, blank=True, null=False, primary_key=True)
+    total_coin = models.IntegerField(null=False, blank=False, default=0)
+
+    class Meta:
+        verbose_name="Coin_Amount"
+
+    def __str__(self):
+        return f" The user {self.userId} has total coin {self.total_coin}"
 
 class Gift_Info(Abstarct):
     ArtistId = models.CharField(max_length=255, null=False, blank=False)

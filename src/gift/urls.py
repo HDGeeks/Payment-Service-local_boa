@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework import routers
-from .views import TelebirrGiftPaymentViewset, GiveGiftArtistViewset, BuyGiftViewSet, notify, dummy_dec
+from .views import TelebirrGiftPaymentViewset, GiveGiftArtistViewset, BuyGiftViewSet, notify, dummy_dec ,CoinViewset
 
 router = routers.DefaultRouter(trailing_slash=False)
 
@@ -10,6 +10,7 @@ router.register(r'buy-gift-telebirr', TelebirrGiftPaymentViewset,
                 basename='buy-gift-telebirr')
 router.register(r'save-gift-payment-info', BuyGiftViewSet,
                 basename='gift-payment-info'),
+router.register(r'coin-info', CoinViewset, basename='coin-info')
 
 
 urlpatterns = [
