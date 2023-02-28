@@ -15,8 +15,8 @@ from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 
-from .models import Gift_Info, Gift_Payment_info
-from .serializers import Gift_info_serializer, Gift_payment_serializer
+from .models import Gift_Info, Gift_Payment_info ,Coin
+from .serializers import Gift_info_serializer, Gift_payment_serializer ,Coin_info_serializer
 from .telebirrApi import Telebirr
 from .models import Gift_Payment_info
 from django.shortcuts import get_object_or_404
@@ -43,20 +43,35 @@ def notify(request):
                 outTradeNo=decrypted_data["outTradeNo"])
             # capture the existing amount
             if current.exists():
+                # existing amount
                 current_amount = current.values("payment_amount")[
                     0]["payment_amount"]
+                
+                
+                # user of the outtrade number
+                current_user = current.values("userId")[
+                    0]["userId"]
+
 
                 # perform addition of the current amount with total amount
                 new_amount = current_amount + \
                     int(decrypted_data['totalAmount'])
 
-                # update the row with new info
+                # update the row with new info in gift payment table
                 update_data = Gift_Payment_info.objects.filter(
                     outTradeNo=decrypted_data["outTradeNo"]).update(msisdn=decrypted_data["msisdn"], tradeNo=decrypted_data["tradeNo"], transactionNo=decrypted_data["transactionNo"], payment_amount=new_amount, payment_state="completed")
+                
+                # update the coin table
+                # find the  existing coin per user
+                current_coin = Coin.objects.filter(
+                    userId=current_user).values("total_coin")[0]["total_coin"]
+                # calculate the new coin
+                new_coin = current_coin + int(decrypted_data['totalAmount'])
+                # update the new amount
+                Coin.objects.filter(userId=current_user).update(
+                    total_coin=new_coin)
 
-                # fetch the row for display
-                updated_data = Gift_Payment_info.objects.filter(
-                    outTradeNo=decrypted_data["outTradeNo"]).values()
+                
 
                 # return Response({"Decrypted_Data": decrypted_data, "Updated_Data": updated_data})
                 return Response({"code": 0, "msg": "success"})
@@ -87,6 +102,7 @@ def dummy_dec(request):
 
 
 class BuyGiftViewSet(ModelViewSet):
+    
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 
@@ -99,30 +115,15 @@ class BuyGiftViewSet(ModelViewSet):
         else:
             return Response(Gift_Payment_info.objects.all().values('userId', 'payment_amount'))
 
-    def create(self, request, *args, **kwargs):
-        if (request.data['payment_method'] != "telebirr"):
-            if self.queryset.filter(userId=request.data['userId']).exists():
-                return self.update(request)
-            else:
-                return super().create(request, *args, **kwargs)
-        else:
-            return Response("Telebirr payment method not allowed!")
+  
+        
 
-    def update(self, request, *args, **kwargs):
-        if (request.data['payment_method'] != "telebirr"):
-            current_amount = Gift_Payment_info.objects.filter(
-                userId=request.data['userId']).values("payment_amount")[0]["payment_amount"]
+class CoinViewset(ModelViewSet):
 
-            new_amount = current_amount + int(request.data['payment_amount'])
+    queryset = Coin.objects.all()
+    serializer_class = Coin_info_serializer
+    http_method_names = ['get','head']
 
-            Gift_Payment_info.objects.filter(userId=request.data['userId']).update(
-                payment_amount=new_amount)
-
-            queryset = Gift_Payment_info.objects.filter(userId=request.data['userId']).values(
-                "userId", "payment_amount", "payment_method")
-            return Response(queryset, status=status.HTTP_200_OK)
-        else:
-            return Response("Telebirr payment method not allowed!")
 
 
 class TelebirrGiftPaymentViewset(ModelViewSet):
@@ -139,8 +140,8 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
     def create(self, request, *args, **kwargs):
         if request.data['payment_method'] == "telebirr":
             try:
-                if self.queryset.filter(userId=request.data['userId']).exists():
-                    return self.update(request)
+                # if self.queryset.filter(userId=request.data['userId']).exists():
+                #     return self.update(request)
 
                 nonce = ''
                 outtrade = ''
@@ -176,28 +177,29 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
 
         return Response({'msg': ' payment method is not telebirr'})
 
-    def update(self, request, *args, **kwargs):
-        if request.data['payment_method'] == "telebirr":
-            try:
-                nonce = ''
-                outtrade = ''
-                outtrade = generate_nonce(16)
-                nonce = generate_nonce(16)
-                amount = request.data['payment_amount']
-                pay = send_to_telebirr(amount, nonce, outtrade)
-                if pay['message'] == 'Operation successful':
+    # def update(self, request, *args, **kwargs):
+    #     if request.data['payment_method'] == "telebirr":
+    #         try:
+    #             nonce = ''
+    #             outtrade = ''
+    #             outtrade = generate_nonce(16)
+    #             nonce = generate_nonce(16)
+    #             amount = request.data['payment_amount']
+    #             pay = send_to_telebirr(amount, nonce, outtrade)
+    #             if pay['message'] == 'Operation successful':
 
-                    update = Gift_Payment_info.objects.filter(
-                        userId=request.data['userId']).update(outTradeNo=outtrade)
-                    updated = Gift_Payment_info.objects.filter(
-                        userId=request.data['userId']).values()
-                    return Response({"Telebirr_Response": pay, "Data": updated})
+    #                 update = Gift_Payment_info.objects.filter(
+    #                     userId=request.data['userId']).update(outTradeNo=outtrade)
+                    
+    #                 updated = Gift_Payment_info.objects.filter(
+    #                     userId=request.data['userId']).values()
+    #                 return Response({"Telebirr_Response": pay, "Data": updated})
 
-                return Response({"message": pay['message'], 'status': status.HTTP_400_BAD_REQUEST, })
+    #             return Response({"message": pay['message'], 'status': status.HTTP_400_BAD_REQUEST, })
 
-            except BaseException as e:
-                return Response({'error message': str(e)})
-        return Response({'msg': ' payment method is not telebirr'})
+    #         except BaseException as e:
+    #             return Response({'error message': str(e)})
+    #     return Response({'msg': ' payment method is not telebirr'})
 
 
 class GiveGiftArtistViewset(ModelViewSet):

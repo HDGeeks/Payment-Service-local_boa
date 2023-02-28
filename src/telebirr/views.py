@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view
 import environ
 from datetime import datetime
 from django.db.models import Sum
-
+from super_app.models import *
 from gift.models import Gift_Info
 from .telebirrApi import Telebirr
 from .serializers import (Payment_info_serializer, Purcahsed_album_serializer,
@@ -167,24 +167,56 @@ class PurchasedAlbumsViewset(ModelViewSet):
     queryset = Purcahsed_album.objects.all()
 
     def create(self, request, *args, **kwargs):
-        verify_amount = Payment_info.objects.filter(
+
+        query_params = request.GET
+        q = query_params.get('payment_method')
+
+        if q == "superApp":
+
+            verify_amount = Superapp_Payment_info.objects.filter(
             id=request.data['payment_id']).values("payment_amount")[0]["payment_amount"]
-        verify_payment_state = Payment_info.objects.filter(
-            id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
-        verify_userId = Payment_info.objects.filter(
-            id=request.data['payment_id']).values("userId")[0]["userId"]
-        if verify_amount < int(request.data['album_price_amount']):
-            return Response({"message": "The price for this album cannot exceed the actual payment made ."})
-        elif verify_userId != request.data['userId']:
-            return Response({"message": "This content is not purcahsed by this user ."})
-        elif verify_payment_state.upper() != "COMPLETED":
-            return Response({"message": "The payment status is still pending , cannot be assigned ."})
+            verify_payment_state = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
+            verify_payment_title = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_title")[0]["payment_title"]
+            verify_userId = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("userId")[0]["userId"]
+            if verify_amount < int(request.data['album_price_amount']):
+                return Response({"message": "The price for this album cannot exceed the actual payment made ."})
+            elif verify_userId != request.data['userId']:
+                return Response({"message": "This content is not purcahsed by this user ."})
+            elif verify_payment_state.upper() != "COMPLETED":
+                return Response({"message": "The payment status is pending , cannot be assigned ."})
+            elif verify_payment_title.upper()!= "PURCHASE_ALBUM":
+                return Response({"message": "The payment reason is not to purchase album , cannot be assigned ."})
+
+            else:
+                serializer = Purcahsed_album_serializer(
+                    data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
         else:
-            serializer = Purcahsed_album_serializer(
-                data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            verify_amount = Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_amount")[0]["payment_amount"]
+            verify_payment_state = Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
+            verify_userId = Payment_info.objects.filter(
+                id=request.data['payment_id']).values("userId")[0]["userId"]
+            if verify_amount < int(request.data['album_price_amount']):
+                return Response({"message": "The price for this album cannot exceed the actual payment made ."})
+            elif verify_userId != request.data['userId']:
+                return Response({"message": "This content is not purcahsed by this user ."})
+            elif verify_payment_state.upper() != "COMPLETED":
+                return Response({"message": "The payment status is still pending , cannot be assigned ."})
+            else:
+                serializer = Purcahsed_album_serializer(
+                    data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PurchasedTracksViewset(ModelViewSet):
@@ -219,25 +251,55 @@ class PurchasedTracksViewset(ModelViewSet):
 
 
     def create(self, request, *args, **kwargs):
-        verify_amount = Payment_info.objects.filter(
-            id=request.data['payment_id']).values("payment_amount")[0]["payment_amount"]
-        verify_userId = Payment_info.objects.filter(
-            id=request.data['payment_id']).values("userId")[0]["userId"]
-        verify_payment_state = Payment_info.objects.filter(
-            id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
 
-        if verify_amount < int(request.data['track_price_amount']):
-            return Response({"message": "The price for this track cannot exceed the actual payment made ."})
-        elif verify_userId != request.data['userId']:
-            return Response({"message": "This content is not purcahsed by this user ."})
-        elif verify_payment_state.upper() != "COMPLETED":
-            return Response({"message": "The payment status is still pending , cannot be assigned ."})
+        query_params = request.GET
+        q = query_params.get('payment_method')
+
+        if q == "superApp":
+            verify_amount = Superapp_Payment_info.objects.filter(
+            id=request.data['payment_id']).values("payment_amount")[0]["payment_amount"]
+            verify_userId = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("userId")[0]["userId"]
+            verify_payment_state = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
+            
+            verify_payment_title = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_title")[0]["payment_title"]
+            if verify_amount < int(request.data['track_price_amount']):
+                return Response({"message": "The price for this track cannot exceed the actual payment made ."})
+            elif verify_userId != request.data['userId']:
+                return Response({"message": "This content is not purcahsed by this user ."})
+            elif verify_payment_state.upper() != "COMPLETED":
+                return Response({"message": "The payment status is still pending , cannot be assigned ."})
+            elif verify_payment_title.upper()!= "PURCHASE_TRACK":
+                return Response({"message": "The payment reason is not to purchase a track , cannot be assigned ."})
+
+            else:
+                serializer = Purcahsed_track_serializer(
+                    data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            serializer = Purcahsed_track_serializer(
-                data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            verify_amount = Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_amount")[0]["payment_amount"]
+            verify_userId = Payment_info.objects.filter(
+                id=request.data['payment_id']).values("userId")[0]["userId"]
+            verify_payment_state = Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
+
+            if verify_amount < int(request.data['track_price_amount']):
+                return Response({"message": "The price for this track cannot exceed the actual payment made ."})
+            elif verify_userId != request.data['userId']:
+                return Response({"message": "This content is not purcahsed by this user ."})
+            elif verify_payment_state.upper() != "COMPLETED":
+                return Response({"message": "The payment status is still pending , cannot be assigned ."})
+            else:
+                serializer = Purcahsed_track_serializer(
+                    data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 def send_to_telebirr(amount, nonce, outtrade):

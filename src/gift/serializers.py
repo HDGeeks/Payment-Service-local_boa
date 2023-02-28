@@ -1,7 +1,5 @@
-from dataclasses import fields
-
 from rest_framework import serializers
-from .models import Gift_Payment_info, Gift_Info
+from .models import Gift_Payment_info, Gift_Info ,Coin
 
 
 
@@ -33,3 +31,10 @@ class Gift_info_serializer(serializers.ModelSerializer):
     class Meta:
         model = Gift_Info
         fields = ['id', 'userId', 'ArtistId', 'gift_amount', ]
+
+
+class Coin_info_serializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Coin
+        fields =['userId','total_coin']

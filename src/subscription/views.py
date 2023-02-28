@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, date
 from dateutil.relativedelta import *
 import environ
 from django.db.models import Sum
+from super_app.models import *
 
 
 # Initialise environment variables
@@ -99,56 +100,117 @@ class SubscriptionViewset(ModelViewSet):
             return Response(Subscription.objects.all().values())
 
     def create(self, request, *args, **kwargs):
-        verify_payment_id = Subscription.objects.filter(
-            payment_id=request.data['payment_id']).values("payment_id")
-        verify_payment_state = Subscription_Payment_info.objects.filter(
-            id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
-        verify_userId = Subscription_Payment_info.objects.filter(
-            id=request.data['payment_id']).values("userId")[0]["userId"]
-        if verify_payment_id:
-            return Response({"message": f'This payment id {verify_payment_id} is already used for other subscription.'})
-        if verify_userId != request.data['user_id']:
-            return Response({"message": "This subscription is not purchased by this user ."})
-        elif verify_payment_state.upper() != "COMPLETED":
-            return Response({"message": "The payment status is still pending , cannot be assigned as subscription."})
+        query_params = request.GET
+        q = query_params.get('payment_method')
+        if q == "superApp":
+            verify_payment_id = Superapp_Payment_info.objects.filter(
+                payment_id=request.data['payment_id']).values("payment_id")
+            verify_payment_state = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
+            verify_userId = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("userId")[0]["userId"]
+            verify_payment_title = Superapp_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_title")[0]["payment_title"]
+            if verify_payment_id:
+                return Response({"message": f'This payment id {verify_payment_id} is already used for other subscription.'})
+            if verify_userId != request.data['user_id']:
+                return Response({"message": "This subscription is not purchased by this user ."})
+            elif verify_payment_state.upper() != "COMPLETED":
+                return Response({"message": "The payment status is still pending , cannot be assigned as subscription."})
+            elif verify_payment_title.upper() != "SUBSCRIPTION":
+                return Response({"message": "The payment reason is not for subscription, cannot be assigned."})
 
-        elif request.data['sub_type'] == "MONTHLY":
-            date = datetime.now()
-            new_paid_until_monthly = date + relativedelta(months=+1)
-            #new_paid_until = date + timedelta(months=+1)
-            # request.data._mutable = True
-            # request.data['paid_until']=new_paid_until
-            # request.data._mutable = False
-            pay_load = {}
-            pay_load = {
-                "user_id": request.data['user_id'],
-                "payment_id": request.data['payment_id'],
-                "sub_type": "MONTHLY",
-                "paid_until": new_paid_until_monthly,
-                "is_Subscriebed": True
-            }
-        elif request.data['sub_type'] == "YEARLY":
-            date = datetime.now()
-            new_paid_until_yearly = date + relativedelta(months=+12)
+            elif request.data['sub_type'] == "MONTHLY":
+                date = datetime.now()
+                new_paid_until_monthly = date + relativedelta(months=+1)
+                #new_paid_until = date + timedelta(months=+1)
+                # request.data._mutable = True
+                # request.data['paid_until']=new_paid_until
+                # request.data._mutable = False
+                pay_load = {}
+                pay_load = {
+                    "user_id": request.data['user_id'],
+                    "payment_id": request.data['payment_id'],
+                    "sub_type": "MONTHLY",
+                    "paid_until": new_paid_until_monthly,
+                    "is_Subscriebed": True
+                }
+            elif request.data['sub_type'] == "YEARLY":
+                date = datetime.now()
+                new_paid_until_yearly = date + relativedelta(months=+12)
 
-            # # remember old state
-            # request.data._mutable = True
-            # request.data['paid_until']=new_paid_until
-            # request.data._mutable = False
-            pay_load = {}
-            pay_load = {
-                "user_id": request.data['user_id'],
-                "payment_id": request.data['payment_id'],
-                "sub_type": "YEARLY",
-                "paid_until": new_paid_until_yearly,
-                "is_Subscriebed": True
-            }
+                # # remember old state
+                # request.data._mutable = True
+                # request.data['paid_until']=new_paid_until
+                # request.data._mutable = False
+                pay_load = {}
+                pay_load = {
+                    "user_id": request.data['user_id'],
+                    "payment_id": request.data['payment_id'],
+                    "sub_type": "MONTHLY",
+                    "paid_until": new_paid_until_yearly,
+                    "is_Subscriebed": True
+                }
 
-        serializer = subscriptionSerializer(
-            data=pay_load)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer = subscriptionSerializer(
+                data=pay_load)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+
+        else:
+
+            verify_payment_id = Subscription.objects.filter(
+                payment_id=request.data['payment_id']).values("payment_id")
+            verify_payment_state = Subscription_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("payment_state")[0]["payment_state"]
+            verify_userId = Subscription_Payment_info.objects.filter(
+                id=request.data['payment_id']).values("userId")[0]["userId"]
+            if verify_payment_id:
+                return Response({"message": f'This payment id {verify_payment_id} is already used for other subscription.'})
+            if verify_userId != request.data['user_id']:
+                return Response({"message": "This subscription is not purchased by this user ."})
+            elif verify_payment_state.upper() != "COMPLETED":
+                return Response({"message": "The payment status is still pending , cannot be assigned as subscription."})
+
+            elif request.data['sub_type'] == "MONTHLY":
+                date = datetime.now()
+                new_paid_until_monthly = date + relativedelta(months=+1)
+                #new_paid_until = date + timedelta(months=+1)
+                # request.data._mutable = True
+                # request.data['paid_until']=new_paid_until
+                # request.data._mutable = False
+                pay_load = {}
+                pay_load = {
+                    "user_id": request.data['user_id'],
+                    "payment_id": request.data['payment_id'],
+                    "sub_type": "MONTHLY",
+                    "paid_until": new_paid_until_monthly,
+                    "is_Subscriebed": True
+                }
+            elif request.data['sub_type'] == "YEARLY":
+                date = datetime.now()
+                new_paid_until_yearly = date + relativedelta(months=+12)
+
+                # # remember old state
+                # request.data._mutable = True
+                # request.data['paid_until']=new_paid_until
+                # request.data._mutable = False
+                pay_load = {}
+                pay_load = {
+                    "user_id": request.data['user_id'],
+                    "payment_id": request.data['payment_id'],
+                    "sub_type": "YEARLY",
+                    "paid_until": new_paid_until_yearly,
+                    "is_Subscriebed": True
+                }
+
+            serializer = subscriptionSerializer(
+                data=pay_load)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PaymentViewset(ModelViewSet):

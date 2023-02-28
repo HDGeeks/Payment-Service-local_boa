@@ -19,6 +19,7 @@ def api_root(request, format=None):
         'gift-buy-telebirr-list': reverse('buy-gift-telebirr-list', request=request, format=format),
         'gift-payment-info-list': reverse('gift-payment-info-list', request=request, format=format),
         'gift-give-gift-list': reverse('give-gift-list', request=request, format=format),
+        'coin-info-list': reverse('coin-info-list', request=request, format=format),
         'gift-notify': reverse('notify-url', request=request, format=format),
         'gift-dummy-notify-test': reverse('dummy-notify-url', request=request, format=format),
 
@@ -29,6 +30,11 @@ def api_root(request, format=None):
         'subscribe-notify-url': reverse('subscribe-notify-url', request=request, format=format),
         'subscribed-users-count': reverse('subscribed-users-count', request=request, format=format),
         'schema-json': reverse('schema-json', request=request, format=format),
+
+        # superapp
+
+        'pay-with-super-app': reverse('pay-with-super-app-list', request=request, format=format),
+        'check-superapp-payment': reverse('check-superapp-payment-list', request=request, format=format),
       
         
       
