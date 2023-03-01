@@ -24,4 +24,4 @@ def add_to_coin(instance, sender, created, **kwargs):
         result = Coin.objects.filter(userId=instance.userId).values()
       
 
-        return
+        return True
