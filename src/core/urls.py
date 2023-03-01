@@ -1,6 +1,6 @@
 from xml.dom.minidom import Document
 from django.contrib import admin
-from django.urls import path, include,re_path
+from django.urls import path, include, re_path
 from django.urls import re_path as url
 
 
@@ -28,7 +28,6 @@ from gift.serializers import *
 
 
 class TestViewSet(ModelViewSet):
-
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 
@@ -50,7 +49,7 @@ class TestViewSet(ModelViewSet):
 
 router = DefaultRouter(trailing_slash=False)
 
-router.register(r'', TestViewSet, basename="")
+router.register(r"", TestViewSet, basename="")
 
 # Test Code END
 ###############################################
@@ -62,7 +61,6 @@ schema_view = get_schema_view(
     # API schema for our accounts
     openapi.Info(
         title="PAYMENT API",
-       
         default_version="v1",
         description="payment API description",
         terms_of_service="https://www.google.com/policies/terms/",
@@ -74,28 +72,23 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path("admin/", admin.site.urls,name='admin'),
-    path('root/', api_root, name='root'),
+    path("admin/", admin.site.urls, name="admin"),
+    path("root/", api_root, name="root"),
     path("payment/", include("telebirr.urls")),
     path("gift/", include("gift.urls")),
     path("super/", include("super_app.urls")),
     path("tests/", include(router.urls)),
-    #path("paypal/", include("paypal.urls")),
+    # path("paypal/", include("paypal.urls")),
     path("subscription/", include("subscription.urls")),
     path("boa/", include("abyssinia.urls")),
     # API documentation urls
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
-        name="schema-swagger-ui"),
-
-
-    path("redoc/", schema_view.with_ui("redoc",
-         cache_timeout=0), name="schema-redoc"),
-
-    path('openapi.yml',
-         schema_view.without_ui(cache_timeout=0), name='schema-json'),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    path("openapi.yml", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     # Report Builde
-    re_path(r'^report_builder/', include('report_builder.urls'))
-
+    re_path(r"^report_builder/", include("report_builder.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

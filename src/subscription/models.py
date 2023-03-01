@@ -15,15 +15,11 @@ class Abstarct(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
 
 class Subscription_Payment_info(Abstarct):
-    PAYMENT_STATUS = (
-        ("PENDING", "pending"),
-        ("COMPLETED", "completed")
-
-    )
+    PAYMENT_STATUS = (("PENDING", "pending"), ("COMPLETED", "completed"))
     userId = models.CharField(max_length=255, null=False, blank=True)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)
     payment_method = models.CharField(max_length=255, null=False, blank=True)
@@ -31,37 +27,30 @@ class Subscription_Payment_info(Abstarct):
     msisdn = models.CharField(max_length=255, null=False, blank=True)
     tradeNo = models.CharField(max_length=255, null=False, blank=True)
     transactionNo = models.CharField(max_length=255, null=False, blank=True)
-    payment_state = models.CharField(max_length=9,
-                                     choices=PAYMENT_STATUS,
-                                     default="PENDING")
+    payment_state = models.CharField(
+        max_length=9, choices=PAYMENT_STATUS, default="PENDING"
+    )
 
     class Meta:
-        ordering = ['id']
+        ordering = ["id"]
 
     def __str__(self):
-        return f'payment_id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr'
+        return f"payment_id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr"
 
 
 class Subscription(Abstarct):
-
-    SUBSCRIPTION_TYPE = (
-        ("MONTHLY", "monthly"),
-        ("YEARLY", "yearly")
-
-    )
+    SUBSCRIPTION_TYPE = (("MONTHLY", "monthly"), ("YEARLY", "yearly"))
     user_id = models.CharField(max_length=255, blank=False, null=True)
-    payment_id = models.ForeignKey(
-        Subscription_Payment_info, on_delete=models.PROTECT)
+    payment_id = models.ForeignKey(Subscription_Payment_info, on_delete=models.PROTECT)
 
     subscription_date = models.DateTimeField(auto_now=True)
     paid_until = models.DateTimeField(null=False, blank=True)
 
-    is_Subscriebed = models.BooleanField(
-        blank=False, null=False, default=False)
+    is_Subscriebed = models.BooleanField(blank=False, null=False, default=False)
 
-    sub_type = models.CharField(max_length=50,
-                                choices=SUBSCRIPTION_TYPE,
-                                default="MONTHLY")
+    sub_type = models.CharField(
+        max_length=50, choices=SUBSCRIPTION_TYPE, default="MONTHLY"
+    )
 
     def __str__(self):
         return self.user_id
@@ -70,22 +59,16 @@ class Subscription(Abstarct):
         super(Subscription, self).save(*args, **kwargs)
 
         try:
-
             url = "https://kinideas-profile-dev-vdzflryflq-ew.a.run.app/subscribedUsers"
-            data = {
-                "user_id": self.user_id,
-                "subscription_type": self.sub_type
-            }
+            data = {"user_id": self.user_id, "subscription_type": self.sub_type}
 
-            headers = {'Content-type': 'application/json',
-                       'Accept': 'application/json'}
+            headers = {"Content-type": "application/json", "Accept": "application/json"}
 
             retry_strategy = Retry(
                 total=5,
                 backoff_factor=0.5,
                 status_forcelist=[429, 500, 502, 503, 504],
                 allowed_methods=["HEAD", "GET", "OPTIONS"],
-
             )
             adapter = HTTPAdapter(max_retries=retry_strategy)
             http = requests.Session()
@@ -100,10 +83,10 @@ class Subscription(Abstarct):
 
         except BaseException as e:
             send_mail(
-                'couldnt send data',
+                "couldnt send data",
                 data,
-                'kinideas.tech@gmail.com',
-                ['dannyhd88@gmail.com'],
+                "kinideas.tech@gmail.com",
+                ["dannyhd88@gmail.com"],
                 fail_silently=False,
             )
             with open("exception_track.txt", "a") as f:

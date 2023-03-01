@@ -1,77 +1,73 @@
 import random
 import string
+
 import environ
 from django.db.models import Sum
-from django.core.mail import send_mail
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
-from rsa import PublicKey
-import json
-
-from telebirr.decrypt import Decrypt
-from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
-from .models import Gift_Info, Gift_Payment_info ,Coin
-from .serializers import Gift_info_serializer, Gift_payment_serializer ,Coin_info_serializer
+from telebirr.decrypt import Decrypt
+
+from .models import Coin, Gift_Info, Gift_Payment_info
+from .serializers import (Coin_info_serializer, Gift_info_serializer,
+                          Gift_payment_serializer)
 from .telebirrApi import Telebirr
-from .models import Gift_Payment_info
-from django.shortcuts import get_object_or_404
 
 # Initialise environment variables
 env = environ.Env()
 environ.Env.read_env()
 
 
-@api_view(['GET', 'POST'])
+@api_view(["GET", "POST"])
 @csrf_exempt
 def notify(request):
-
-    if request.method == 'POST':
+    if request.method == "POST":
         payload = request.body
         try:
             decrypted_data = Telebirr.decrypt(
-                public_key=env("Public_Key"), payload=payload)
+                public_key=env("Public_Key"), payload=payload
+            )
         except Exception as e:
             return Response(str(e))
         else:
             # get current amount using outtade
             current = Gift_Payment_info.objects.filter(
-                outTradeNo=decrypted_data["outTradeNo"])
+                outTradeNo=decrypted_data["outTradeNo"]
+            )
             # capture the existing amount
             if current.exists():
                 # existing amount
-                current_amount = current.values("payment_amount")[
-                    0]["payment_amount"]
-                
-                
-                # user of the outtrade number
-                current_user = current.values("userId")[
-                    0]["userId"]
+                current_amount = current.values("payment_amount")[0]["payment_amount"]
 
+                # user of the outtrade number
+                current_user = current.values("userId")[0]["userId"]
 
                 # perform addition of the current amount with total amount
-                new_amount = current_amount + \
-                    int(decrypted_data['totalAmount'])
+                new_amount = current_amount + int(decrypted_data["totalAmount"])
 
                 # update the row with new info in gift payment table
                 update_data = Gift_Payment_info.objects.filter(
-                    outTradeNo=decrypted_data["outTradeNo"]).update(msisdn=decrypted_data["msisdn"], tradeNo=decrypted_data["tradeNo"], transactionNo=decrypted_data["transactionNo"], payment_amount=new_amount, payment_state="completed")
-                
+                    outTradeNo=decrypted_data["outTradeNo"]
+                ).update(
+                    msisdn=decrypted_data["msisdn"],
+                    tradeNo=decrypted_data["tradeNo"],
+                    transactionNo=decrypted_data["transactionNo"],
+                    payment_amount=new_amount,
+                    payment_state="completed",
+                )
+
                 # update the coin table
                 # find the  existing coin per user
-                current_coin = Coin.objects.filter(
-                    userId=current_user).values("total_coin")[0]["total_coin"]
+                current_coin = Coin.objects.filter(userId=current_user).values(
+                    "total_coin"
+                )[0]["total_coin"]
                 # calculate the new coin
-                new_coin = current_coin + int(decrypted_data['totalAmount'])
+                new_coin = current_coin + int(decrypted_data["totalAmount"])
                 # update the new amount
-                Coin.objects.filter(userId=current_user).update(
-                    total_coin=new_coin)
-
-                
+                Coin.objects.filter(userId=current_user).update(total_coin=new_coin)
 
                 # return Response({"Decrypted_Data": decrypted_data, "Updated_Data": updated_data})
                 return Response({"code": 0, "msg": "success"})
@@ -81,49 +77,57 @@ def notify(request):
         return Response(" only methods get and post allowed .")
 
 
-@api_view(['GET', 'POST'])
+@api_view(["GET", "POST"])
 @csrf_exempt
 def dummy_dec(request):
-
-    if request.method == 'POST' or request.method == 'GET':
-
+    if request.method == "POST" or request.method == "GET":
         payload = request.body
 
         if payload != "":
             try:
                 decrypted_data = Telebirr.decrypt(
-                    public_key=env("Public_Key"), payload=payload)
+                    public_key=env("Public_Key"), payload=payload
+                )
             except Exception as e:
                 return Response(str(e))
             else:
-                return Response({"Decrypted_Data": decrypted_data, })
+                return Response(
+                    {
+                        "Decrypted_Data": decrypted_data,
+                    }
+                )
 
     return Response("post method only")
 
 
 class BuyGiftViewSet(ModelViewSet):
-    
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 
     def list(self, request, *args, **kwargs):
-        user_id = self.request.query_params.get('user')
+        user_id = self.request.query_params.get("user")
         if user_id:
             if user_id == "all":
-                return Response(Gift_Payment_info.objects.aggregate(total_coin_for_all_users=Sum('payment_amount')))
-            return Response(Gift_Payment_info.objects.filter(userId=user_id).values("userId", "payment_amount"))
+                return Response(
+                    Gift_Payment_info.objects.aggregate(
+                        total_coin_for_all_users=Sum("payment_amount")
+                    )
+                )
+            return Response(
+                Gift_Payment_info.objects.filter(userId=user_id).values(
+                    "userId", "payment_amount"
+                )
+            )
         else:
-            return Response(Gift_Payment_info.objects.all().values('userId', 'payment_amount'))
+            return Response(
+                Gift_Payment_info.objects.all().values("userId", "payment_amount")
+            )
 
-  
-        
 
 class CoinViewset(ModelViewSet):
-
     queryset = Coin.objects.all()
     serializer_class = Coin_info_serializer
-    http_method_names = ['get','head']
-
+    http_method_names = ["get", "head"]
 
 
 class TelebirrGiftPaymentViewset(ModelViewSet):
@@ -134,24 +138,25 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
     save the result and return
     the data generated as json object
     """
+
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 
     def create(self, request, *args, **kwargs):
-        if request.data['payment_method'] == "telebirr":
+        if request.data["payment_method"] == "telebirr":
             try:
                 # if self.queryset.filter(userId=request.data['userId']).exists():
                 #     return self.update(request)
 
-                nonce = ''
-                outtrade = ''
+                nonce = ""
+                outtrade = ""
                 outtrade = generate_nonce(16)
                 nonce = generate_nonce(16)
 
-                amount = request.data['payment_amount']
+                amount = request.data["payment_amount"]
                 pay = send_to_telebirr(amount, nonce, outtrade)
 
-                if pay['message'] == 'Operation successful':
+                if pay["message"] == "Operation successful":
                     current_amount = 0
 
                     content = {
@@ -162,20 +167,27 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
                         "msisdn": "",
                         "tradeNo": "",
                         "transactionNo": "",
-                        "payment_state": request.data["payment_state"]
+                        "payment_state": request.data["payment_state"],
                     }
 
                     serializer = Gift_payment_serializer(data=content)
                     if serializer.is_valid(raise_exception=True):
                         serializer.save()
-                        return Response({"Telebirr_Response": pay, "Data": serializer.data})
+                        return Response(
+                            {"Telebirr_Response": pay, "Data": serializer.data}
+                        )
 
-                return Response({"message": pay['message'], 'status': status.HTTP_400_BAD_REQUEST, })
+                return Response(
+                    {
+                        "message": pay["message"],
+                        "status": status.HTTP_400_BAD_REQUEST,
+                    }
+                )
 
             except BaseException as e:
-                return Response({'error message': str(e)})
+                return Response({"error message": str(e)})
 
-        return Response({'msg': ' payment method is not telebirr'})
+        return Response({"msg": " payment method is not telebirr"})
 
     # def update(self, request, *args, **kwargs):
     #     if request.data['payment_method'] == "telebirr":
@@ -190,7 +202,7 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
 
     #                 update = Gift_Payment_info.objects.filter(
     #                     userId=request.data['userId']).update(outTradeNo=outtrade)
-                    
+
     #                 updated = Gift_Payment_info.objects.filter(
     #                     userId=request.data['userId']).values()
     #                 return Response({"Telebirr_Response": pay, "Data": updated})
@@ -207,33 +219,45 @@ class GiveGiftArtistViewset(ModelViewSet):
     queryset = Gift_Info.objects.all()
 
     def list(self, request, *args, **kwargs):
-        artist = self.request.query_params.get('artist')
+        artist = self.request.query_params.get("artist")
         if artist:
             if artist == "all":
-                return Response(Gift_Info.objects.values('ArtistId').annotate(total_gift_collected=Sum('gift_amount')).order_by("-total_gift_collected")[:10])
-            queryset = Gift_Info.objects.filter(
-                ArtistId=artist)
+                return Response(
+                    Gift_Info.objects.values("ArtistId")
+                    .annotate(total_gift_collected=Sum("gift_amount"))
+                    .order_by("-total_gift_collected")[:10]
+                )
+            queryset = Gift_Info.objects.filter(ArtistId=artist)
             queryset = queryset.values("ArtistId", "gift_amount")
-            total_gift = sum(queryset.values_list('gift_amount', flat=True))
+            total_gift = sum(queryset.values_list("gift_amount", flat=True))
             result = {"ArtistId": artist, "total": total_gift}
             return Response(result)
         else:
-            return Response(Gift_Info.objects.all().values("id", "ArtistId", "gift_amount"))
+            return Response(
+                Gift_Info.objects.all().values("id", "ArtistId", "gift_amount")
+            )
 
     def create(self, request, *args, **kwargs):
+        # find the coin available per user
+        current_coin_amount = Coin.objects.filter(userId=request.data["userId"]).values(
+            "total_coin"
+        )[0]["total_coin"]
 
-        current_amount=Gift_Payment_info.objects.filter(
-            userId=request.data['userId']).values("payment_amount")[0]["payment_amount"]
+        # validate if the user have enough balance
+        if int(request.data["gift_amount"]) > current_coin_amount:
+            return Response({"message": " You dont have enough gift coin balance ."})
 
-        if int(request.data['gift_amount']) > current_amount:
-            return Response({"message": " You dont xhave enough balance ."})
+        # subtract the amount to gift from the existing coin amount
+        new_deducted_coin_amount = current_coin_amount - int(
+            request.data["gift_amount"]
+        )
 
-        new_amount=current_amount - int(request.data['gift_amount'])
-
-        Gift_Payment_info.objects.filter(userId=request.data['userId']).update(
-            payment_amount=new_amount)
-
-        serializer=Gift_info_serializer(data=request.data)
+        # update the coin model with new deducted amount
+        Coin.objects.filter(userId=request.data["userId"]).update(
+            total_coin=new_deducted_coin_amount
+        )
+        # return response to front end
+        serializer = Gift_info_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -242,11 +266,10 @@ class GiveGiftArtistViewset(ModelViewSet):
 
 def send_to_telebirr(amount, nonce, outtrade):
     # Initialise environment variables
-    env=environ.Env()
+    env = environ.Env()
     environ.Env.read_env()
 
-    telebirr=Telebirr(
-
+    telebirr = Telebirr(
         app_id=env("App_ID"),
         app_key=env("App_Key"),
         public_key=env("Public_Key"),
@@ -265,12 +288,12 @@ def send_to_telebirr(amount, nonce, outtrade):
 
 
 def decrypt_response_from_telebirr(message):
-    responded_data=Decrypt(
-        message=message)
+    responded_data = Decrypt(message=message)
     return responded_data
 
 
 def generate_nonce(length):
-    result_str=''.join(random.choices(
-        string.ascii_uppercase + string.digits + string.digits, k=length))
+    result_str = "".join(
+        random.choices(string.ascii_uppercase + string.digits + string.digits, k=length)
+    )
     return result_str

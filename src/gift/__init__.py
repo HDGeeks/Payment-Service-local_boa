@@ -1,1 +1,1 @@
-default_app_config = 'gift.apps.GiftConfig'
+default_app_config = "gift.apps.GiftConfig"

@@ -22,4 +22,4 @@ class VerifyResponseService:
         result = tools.verify(data)
 
         # print(json.dumps(req))
-        return (result)
+        return result
