@@ -224,10 +224,7 @@ class SubscriptionViewset(ModelViewSet):
             elif request.data["sub_type"] == "MONTHLY":
                 date = datetime.now()
                 new_paid_until_monthly = date + relativedelta(months=+1)
-                # new_paid_until = date + timedelta(months=+1)
-                # request.data._mutable = True
-                # request.data['paid_until']=new_paid_until
-                # request.data._mutable = False
+            
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],

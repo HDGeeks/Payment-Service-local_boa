@@ -105,29 +105,42 @@ class BuyGiftViewSet(ModelViewSet):
     serializer_class = Gift_payment_serializer
 
     def list(self, request, *args, **kwargs):
+
+        
         user_id = self.request.query_params.get("user")
         if user_id:
             if user_id == "all":
                 return Response(
                     Gift_Payment_info.objects.aggregate(
-                        total_coin_for_all_users=Sum("payment_amount")
+                        total_gift_payment_all_users=Sum("payment_amount")
                     )
                 )
-            return Response(
-                Gift_Payment_info.objects.filter(userId=user_id).values(
-                    "userId", "payment_amount"
+           
+            
+            else:
+                per_user=Gift_Payment_info.objects.filter(userId=user_id).values(
+                        "userId", "payment_amount"
+                    )
+                total_per_user = per_user.aggregate(
+                    total_per_user=Sum("payment_amount")
                 )
-            )
-        else:
             return Response(
-                Gift_Payment_info.objects.all().values("userId", "payment_amount")
-            )
+                    {"per_user": per_user, "total_per_this_user": total_per_user},
+                    status=status.HTTP_200_OK,
+                )
+        return Response(Gift_Payment_info.objects.all(),status=status.HTTP_200_OK)
 
 
 class CoinViewset(ModelViewSet):
     queryset = Coin.objects.all()
     serializer_class = Coin_info_serializer
     http_method_names = ["get", "head"]
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.query_params.get("user")
+        if user_id:
+            return Response(Coin.objects.filter(userId=user_id).values())
+        return Response(Coin.objects.all())
 
 
 class TelebirrGiftPaymentViewset(ModelViewSet):
