@@ -18,16 +18,15 @@ class ApplyFabricTokenService:
         self.merchantAppId = merchantAppId
 
     def applyFabricToken(self):
-        headers = {
-            "Content-Type": "application/json",
-            "X-APP-Key": self.fabricAppId
-        }
-        payload = {
-            "appSecret": self.appSecret
-        }
-        
+        headers = {"Content-Type": "application/json", "X-APP-Key": self.fabricAppId}
+        payload = {"appSecret": self.appSecret}
+
         data = json.dumps(payload)
         authToken = requests.post(
-            url=self.BASE_URL+"/payment/v1/token", headers=headers, data=data, verify=False)
+            url=self.BASE_URL + "/payment/v1/token",
+            headers=headers,
+            data=data,
+            verify=False,
+        )
         # print(authToken.json())
         return authToken.json()

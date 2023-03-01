@@ -11,16 +11,11 @@ class Abstarct(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
 
 class Gift_Payment_info(Abstarct):
-    
-    PAYMENT_STATUS = (
-        ("PENDING", "PENDING"),
-        ("COMPLETED", "COMPLETED")
-
-    )
+    PAYMENT_STATUS = (("PENDING", "PENDING"), ("COMPLETED", "COMPLETED"))
     userId = models.CharField(max_length=255)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)
     payment_method = models.CharField(max_length=255, null=False, blank=True)
@@ -28,28 +23,28 @@ class Gift_Payment_info(Abstarct):
     msisdn = models.CharField(max_length=255, null=False, blank=True)
     tradeNo = models.CharField(max_length=255, null=False, blank=True)
     transactionNo = models.CharField(max_length=255, null=False, blank=True)
-    payment_state = models.CharField(max_length=9,
-                                     choices=PAYMENT_STATUS,
-                                     default="PENDING")
+    payment_state = models.CharField(
+        max_length=9, choices=PAYMENT_STATUS, default="PENDING"
+    )
 
     class Meta:
-        #ordering = []
+        # ordering = []
         verbose_name = "Gift_Payments"
 
     def __str__(self):
-        return f'gift-id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr'
+        return f"gift-id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr"
+
 
 class Coin(Abstarct):
-
-    userId = models.CharField(
-        max_length=255, blank=True, null=False, primary_key=True)
+    userId = models.CharField(max_length=255, blank=True, null=False, primary_key=True)
     total_coin = models.IntegerField(null=False, blank=False, default=0)
 
     class Meta:
-        verbose_name="Coin_Amount"
+        verbose_name = "Coin_Amount"
 
     def __str__(self):
         return f" The user {self.userId} has total coin {self.total_coin}"
+
 
 class Gift_Info(Abstarct):
     ArtistId = models.CharField(max_length=255, null=False, blank=False)
@@ -61,4 +56,4 @@ class Gift_Info(Abstarct):
         verbose_name = "Gift_Informations"
 
     def __str__(self):
-        return f'{self.userId} gifted to  {self.ArtistId} at {self.created_at}'
+        return f"{self.userId} gifted to  {self.ArtistId} at {self.created_at}"

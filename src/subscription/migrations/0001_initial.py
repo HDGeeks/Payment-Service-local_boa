@@ -5,48 +5,82 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Subscription_Payment_info',
+            name="Subscription_Payment_info",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('userId', models.CharField(blank=True, max_length=255)),
-                ('payment_amount', models.IntegerField(default=0)),
-                ('payment_method', models.CharField(blank=True, max_length=255)),
-                ('outTradeNo', models.CharField(blank=True, max_length=255)),
-                ('msisdn', models.CharField(blank=True, max_length=255)),
-                ('tradeNo', models.CharField(blank=True, max_length=255)),
-                ('transactionNo', models.CharField(blank=True, max_length=255)),
-                ('payment_state', models.CharField(choices=[('PENDING', 'pending'), ('COMPLETED', 'completed')], default='PENDING', max_length=9)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("userId", models.CharField(blank=True, max_length=255)),
+                ("payment_amount", models.IntegerField(default=0)),
+                ("payment_method", models.CharField(blank=True, max_length=255)),
+                ("outTradeNo", models.CharField(blank=True, max_length=255)),
+                ("msisdn", models.CharField(blank=True, max_length=255)),
+                ("tradeNo", models.CharField(blank=True, max_length=255)),
+                ("transactionNo", models.CharField(blank=True, max_length=255)),
+                (
+                    "payment_state",
+                    models.CharField(
+                        choices=[("PENDING", "pending"), ("COMPLETED", "completed")],
+                        default="PENDING",
+                        max_length=9,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['id'],
+                "ordering": ["id"],
             },
         ),
         migrations.CreateModel(
-            name='Subscription',
+            name="Subscription",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user_id', models.CharField(max_length=255, null=True)),
-                ('subscription_date', models.DateTimeField(auto_now=True)),
-                ('paid_until', models.DateTimeField(blank=True)),
-                ('is_Subscriebed', models.BooleanField(default=False)),
-                ('sub_type', models.CharField(choices=[('MONTHLY', 'monthly'), ('YEARLY', 'yearly')], default='MONTHLY', max_length=50)),
-                ('payment_id', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='subscription.subscription_payment_info')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("user_id", models.CharField(max_length=255, null=True)),
+                ("subscription_date", models.DateTimeField(auto_now=True)),
+                ("paid_until", models.DateTimeField(blank=True)),
+                ("is_Subscriebed", models.BooleanField(default=False)),
+                (
+                    "sub_type",
+                    models.CharField(
+                        choices=[("MONTHLY", "monthly"), ("YEARLY", "yearly")],
+                        default="MONTHLY",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "payment_id",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="subscription.subscription_payment_info",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'abstract': False,
+                "ordering": ["-created_at"],
+                "abstract": False,
             },
         ),
     ]

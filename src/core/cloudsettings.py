@@ -17,7 +17,7 @@ env = environ.Env()
 env.read_env(io.StringIO(os.environ.get("PAYMENT_SERVICE_SETTINGS", None)))
 
 # Setting this value from django-environ
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
 # If defined, add service URL to Django security settings
 PAYMENT_SERVICE_URL = env("PAYMENT_SERVICE_URL", default=None)
