@@ -3,6 +3,7 @@ from .views import (
     PaymentViewset,
     notify,
     SubscribeWithTelebirrViewSet,
+    SubscriptionFeeViewset,
     subscribers_count,
 )
 from rest_framework import routers
@@ -11,6 +12,8 @@ from django.urls import path
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r"subscribe", SubscriptionViewset, basename="subscribe")
+router.register(r"subscription-fee", SubscriptionFeeViewset,
+                basename="subscription-fee")
 router.register(r"pay_to_subscribe", PaymentViewset, basename="pay_to_subscribe")
 router.register(
     r"subscribe_with_telebirr",

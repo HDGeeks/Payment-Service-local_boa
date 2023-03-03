@@ -1,7 +1,7 @@
 import dataclasses
 from rest_framework.viewsets import ModelViewSet
-from .serializers import subscriptionSerializer, Subscription_payment_serializer
-from .models import Subscription, Subscription_Payment_info
+from .serializers import subscriptionSerializer, Subscription_payment_serializer ,Subscription_fee_serializer
+from .models import Subscription, Subscription_Payment_info,SubscriptionFee
 from rest_framework.response import Response
 import string
 from rest_framework import status
@@ -103,6 +103,10 @@ def subscribers_count(request):
             "this_week_subscribed_users": this_week_subscribed_users,
         }
     )
+
+class SubscriptionFeeViewset(ModelViewSet):
+    serializer_class=Subscription_fee_serializer
+    queryset=SubscriptionFee.objects.all()
 
 
 class SubscriptionViewset(ModelViewSet):

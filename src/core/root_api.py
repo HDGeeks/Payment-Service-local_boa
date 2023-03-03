@@ -55,6 +55,9 @@ def api_root(request, format=None):
             "subscribed-users-count": reverse(
                 "subscribed-users-count", request=request, format=format
             ),
+            "subscription-fee-list": reverse(
+                "subscription-fee-list", request=request, format=format
+            ),
             "schema-json": reverse("schema-json", request=request, format=format),
             # superapp
             "pay-with-super-app": reverse(

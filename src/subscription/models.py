@@ -17,7 +17,13 @@ class Abstarct(models.Model):
         abstract = True
         ordering = ["-created_at"]
 
+class SubscriptionFee(Abstarct):
+    monthly_subscription_fee=models.IntegerField(null=False,blank=False,default=0)
+    yearly_subscription_fee = models.IntegerField(
+        null=False, blank=False, default=0)
 
+    def __str__(self) -> str:
+        return f'Monthly fee : {self.monthly_subscription_fee} , Yearly_fee : {self.yearly_subscription_fee}'
 class Subscription_Payment_info(Abstarct):
     PAYMENT_STATUS = (("PENDING", "pending"), ("COMPLETED", "completed"))
     userId = models.CharField(max_length=255, null=False, blank=True)
