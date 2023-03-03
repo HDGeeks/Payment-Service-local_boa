@@ -4,23 +4,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('gift', '0001_initial'),
+        ("gift", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Gift_Revenue_Rate',
+            name="Gift_Revenue_Rate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('rate', models.IntegerField(default=5)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("rate", models.IntegerField(default=5)),
             ],
             options={
-                'ordering': ['-created_at'],
-                'abstract': False,
+                "ordering": ["-created_at"],
+                "abstract": False,
             },
         ),
     ]

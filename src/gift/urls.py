@@ -7,7 +7,7 @@ from .views import (
     notify,
     dummy_dec,
     CoinViewset,
-    GiftRevenuViewset
+    GiftRevenuViewset,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -21,8 +21,9 @@ router.register(
     r"save-gift-payment-info", BuyGiftViewSet, basename="gift-payment-info"
 ),
 router.register(r"coin-info", CoinViewset, basename="coin-info")
-router.register(r"set-revenue-from-gift", GiftRevenuViewset,
-                basename="set-revenue-from-gift")
+router.register(
+    r"set-revenue-from-gift", GiftRevenuViewset, basename="set-revenue-from-gift"
+)
 
 
 urlpatterns = [

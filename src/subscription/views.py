@@ -1,7 +1,11 @@
 import dataclasses
 from rest_framework.viewsets import ModelViewSet
-from .serializers import subscriptionSerializer, Subscription_payment_serializer ,Subscription_fee_serializer
-from .models import Subscription, Subscription_Payment_info,SubscriptionFee
+from .serializers import (
+    subscriptionSerializer,
+    Subscription_payment_serializer,
+    Subscription_fee_serializer,
+)
+from .models import Subscription, Subscription_Payment_info, SubscriptionFee
 from rest_framework.response import Response
 import string
 from rest_framework import status
@@ -104,9 +108,10 @@ def subscribers_count(request):
         }
     )
 
+
 class SubscriptionFeeViewset(ModelViewSet):
-    serializer_class=Subscription_fee_serializer
-    queryset=SubscriptionFee.objects.all()
+    serializer_class = Subscription_fee_serializer
+    queryset = SubscriptionFee.objects.all()
 
 
 class SubscriptionViewset(ModelViewSet):
@@ -228,7 +233,7 @@ class SubscriptionViewset(ModelViewSet):
             elif request.data["sub_type"] == "MONTHLY":
                 date = datetime.now()
                 new_paid_until_monthly = date + relativedelta(months=+1)
-            
+
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],

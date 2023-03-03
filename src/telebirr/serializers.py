@@ -1,6 +1,11 @@
 from dataclasses import fields
 from rest_framework import serializers
-from .models import Purcahsed_album, Purcahsed_track, Payment_info ,TrackRevenueRatePercentage
+from .models import (
+    Purcahsed_album,
+    Purcahsed_track,
+    Payment_info,
+    TrackRevenueRatePercentage,
+)
 
 
 class Purcahsed_track_serializer(serializers.ModelSerializer):
@@ -15,10 +20,12 @@ class Purcahsed_track_serializer(serializers.ModelSerializer):
             "isPurcahsed",
         ]
 
+
 class Track_revenue_rate_serializer(serializers.ModelSerializer):
     class Meta:
         model = TrackRevenueRatePercentage
         fields = "__all__"
+
 
 class Purcahsed_album_serializer(serializers.ModelSerializer):
     class Meta:

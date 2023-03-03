@@ -4,24 +4,31 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('subscription', '0001_initial'),
+        ("subscription", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SubscriptionFee',
+            name="SubscriptionFee",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('monthly_subscription_fee', models.IntegerField(default=0)),
-                ('yearly_subscription_fee', models.IntegerField(default=0)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("monthly_subscription_fee", models.IntegerField(default=0)),
+                ("yearly_subscription_fee", models.IntegerField(default=0)),
             ],
             options={
-                'ordering': ['-created_at'],
-                'abstract': False,
+                "ordering": ["-created_at"],
+                "abstract": False,
             },
         ),
     ]

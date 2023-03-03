@@ -1,4 +1,4 @@
-from .models import Subscription, Subscription_Payment_info,SubscriptionFee
+from .models import Subscription, Subscription_Payment_info, SubscriptionFee
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import datetime
@@ -20,10 +20,11 @@ class Subscription_payment_serializer(ModelSerializer):
             "payment_state",
         ]
 
+
 class Subscription_fee_serializer(ModelSerializer):
     class Meta:
         model = SubscriptionFee
-        fields='__all__'
+        fields = "__all__"
 
 
 class subscriptionSerializer(ModelSerializer):
