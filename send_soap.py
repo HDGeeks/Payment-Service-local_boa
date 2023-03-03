@@ -4,14 +4,14 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-#url = "http://10.180.79.13:10001/payment/services/APIRequestMgrService"
+# url = "http://10.180.79.13:10001/payment/services/APIRequestMgrService"
 url = "http://196.188.120.3:10001/payment/services/APIRequestMgrService"
-#headers = {'content-type': 'application/soap+xml'}
+# headers = {'content-type': 'application/soap+xml'}
 # env = Environment(loader=PackageLoader('myapp', 'templates'))
 # template = env.get_template('soaprequests/WeatherSericeRequest.xml')
 # body = template.render()
-headers = {'content-type': 'text/xml'}
-body = '''<?xml version="1.0" encoding="UTF-8"?>
+headers = {"content-type": "text/xml"}
+body = """<?xml version="1.0" encoding="UTF-8"?>
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:api="http://cps.huawei.com/synccpsinterface/api_requestmgr" xmlns:req="http://cps.huawei.com/synccpsinterface/request" xmlns:com="http://cps.huawei.com/synccpsinterface/common">
    <soapenv:Header/>
    <soapenv:Body>
@@ -58,20 +58,16 @@ body = '''<?xml version="1.0" encoding="UTF-8"?>
       </api:Request>
    </soapenv:Body>
 </soapenv:Envelope>
-			'''
+			"""
 
 session = requests.Session()
 retry = Retry(connect=3, backoff_factor=0.5)
 adapter = HTTPAdapter(max_retries=retry)
-session.mount('http://', adapter)
-session.mount('https://', adapter)
+session.mount("http://", adapter)
+session.mount("https://", adapter)
 try:
-   session.post(url, data=body, headers=headers)
+    session.post(url, data=body, headers=headers)
 except requests.exceptions.ConnectionError as e:
-   print(e)
+    print(e)
 else:
-   print(session)
-
-
-
-
+    print(session)
