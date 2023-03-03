@@ -15,6 +15,7 @@ class Abstarct(models.Model):
 
 
 class Gift_Payment_info(Abstarct):
+    
     PAYMENT_STATUS = (("PENDING", "PENDING"), ("COMPLETED", "COMPLETED"))
     userId = models.CharField(max_length=255)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)

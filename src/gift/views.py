@@ -60,6 +60,7 @@ def notify(request):
                 )
 
                 # update the coin table
+
                 # find the  existing coin per user
                 current_coin = Coin.objects.filter(userId=current_user).values(
                     "total_coin"
@@ -102,6 +103,9 @@ def dummy_dec(request):
 class GiftRevenuViewset(ModelViewSet):
     serializer_class=Gift_revenue_rate_serializer
     queryset=Gift_Revenue_Rate.objects.all()
+
+
+    
 class BuyGiftViewSet(ModelViewSet):
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
@@ -128,9 +132,10 @@ class BuyGiftViewSet(ModelViewSet):
                 )
             return Response(
                     {"per_user": per_user, "total_per_this_user": total_per_user},
-                    status=status.HTTP_200_OK,
-                )
-        return Response(Gift_Payment_info.objects.all(),status=status.HTTP_200_OK)
+                    status=status.HTTP_200_OK)
+       
+        return Response(Gift_Payment_info.objects.all().values())
+        
 
 
 class CoinViewset(ModelViewSet):
@@ -142,7 +147,7 @@ class CoinViewset(ModelViewSet):
         user_id = self.request.query_params.get("user")
         if user_id:
             return Response(Coin.objects.filter(userId=user_id).values())
-        return Response(Coin.objects.all())
+        return Response(Coin.objects.all().values(),status=status.HTTP_200_OK)
 
 
 class TelebirrGiftPaymentViewset(ModelViewSet):
