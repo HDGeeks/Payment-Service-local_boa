@@ -45,6 +45,12 @@ class Coin(Abstarct):
     def __str__(self):
         return f" The user {self.userId} has total coin {self.total_coin}"
 
+class Gift_Revenue_Rate(Abstarct):
+    rate=models.IntegerField(null=False,blank=False,default=5)
+
+    def __str__(self) -> str:
+        return f'The current rate is {self.rate}'
+
 
 class Gift_Info(Abstarct):
     ArtistId = models.CharField(max_length=255, null=False, blank=False)

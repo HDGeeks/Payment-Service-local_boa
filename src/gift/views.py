@@ -11,9 +11,9 @@ from rest_framework.viewsets import ModelViewSet
 
 from telebirr.decrypt import Decrypt
 
-from .models import Coin, Gift_Info, Gift_Payment_info
+from .models import Coin, Gift_Info, Gift_Payment_info,Gift_Revenue_Rate
 from .serializers import (Coin_info_serializer, Gift_info_serializer,
-                          Gift_payment_serializer)
+                          Gift_payment_serializer,Gift_revenue_rate_serializer)
 from .telebirrApi import Telebirr
 
 # Initialise environment variables
@@ -99,7 +99,9 @@ def dummy_dec(request):
 
     return Response("post method only")
 
-
+class GiftRevenuViewset(ModelViewSet):
+    serializer_class=Gift_revenue_rate_serializer
+    queryset=Gift_Revenue_Rate.objects.all()
 class BuyGiftViewSet(ModelViewSet):
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer

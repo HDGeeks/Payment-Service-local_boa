@@ -44,6 +44,9 @@ def api_root(request, format=None):
             "gift-dummy-notify-test": reverse(
                 "dummy-notify-url", request=request, format=format
             ),
+            "set-revenue-from-gift-list": reverse(
+                "set-revenue-from-gift-list", request=request, format=format
+            ),
             # subscribe
             "subscribe-list": reverse("subscribe-list", request=request, format=format),
             "subscribe-payment-list": reverse(
