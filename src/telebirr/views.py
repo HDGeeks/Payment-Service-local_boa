@@ -10,14 +10,15 @@ import environ
 from datetime import datetime
 from django.db.models import Sum
 from super_app.models import *
-from gift.models import Gift_Info
+
 from .telebirrApi import Telebirr
 from .serializers import (
     Payment_info_serializer,
     Purcahsed_album_serializer,
     Purcahsed_track_serializer,
+    Track_revenue_rate_serializer
 )
-from .models import Payment_info, Purcahsed_album, Purcahsed_track
+from .models import Payment_info, Purcahsed_album, Purcahsed_track ,TrackRevenueRatePercentage
 from telebirr.decrypt import Decrypt
 import logging
 import random
@@ -171,6 +172,9 @@ class PurchaseWithTelebirrViewSet(ModelViewSet):
             )
 
 
+class TrackRevenueViewset(ModelViewSet):
+    serializer_class=Track_revenue_rate_serializer
+    queryset=TrackRevenueRatePercentage.objects.all()
 class PurchasedAlbumsViewset(ModelViewSet):
     """
     check the request data ,

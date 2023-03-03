@@ -40,6 +40,11 @@ class Payment_info(Abstarct):
     def __str__(self):
         return f"payment_id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr"
 
+class TrackRevenueRatePercentage(Abstarct):
+    rate=models.IntegerField(null=False ,blank=False ,default=5)
+
+    def __str__(self) -> str:
+        return f'The current revenue rate for track is {self.rate}'
 
 class Purcahsed_track(Abstarct):
     userId = models.CharField(max_length=255, null=False, blank=False)

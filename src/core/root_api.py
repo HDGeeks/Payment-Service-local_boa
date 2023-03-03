@@ -26,6 +26,9 @@ def api_root(request, format=None):
             "payment-notify-url": reverse(
                 "payment-notify-url", request=request, format=format
             ),
+            "set-track-revenue-rate": reverse(
+                "set-track-revenue-rate-list", request=request, format=format
+            ),
             # gift
             "gift-buy-telebirr-list": reverse(
                 "buy-gift-telebirr-list", request=request, format=format

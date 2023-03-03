@@ -5,6 +5,7 @@ from .views import (
     PurchasedTracksViewset,
     PurchasedAlbumsViewset,
     SavePurchasePaymentViewSet,
+    TrackRevenueViewset,
     notify,
 )
 
@@ -24,6 +25,7 @@ router.register(
     PurchaseWithTelebirrViewSet,
     basename="purchase-with-telebirr",
 )
+router.register(r"set-track-revenue-rate" , TrackRevenueViewset ,basename="set-track-revenue-rate")
 
 
 urlpatterns = [
