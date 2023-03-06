@@ -40,6 +40,7 @@ def api_root(request, format=None):
                 "give-gift-list", request=request, format=format
             ),
             "coin-info-list": reverse("coin-info-list", request=request, format=format),
+            "gift-payment-analysis": reverse("gift-payment-analysis-list",request=request,format=format),
             "gift-notify": reverse("notify-url", request=request, format=format),
             "gift-dummy-notify-test": reverse(
                 "dummy-notify-url", request=request, format=format
