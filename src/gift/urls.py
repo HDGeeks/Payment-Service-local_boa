@@ -8,6 +8,7 @@ from .views import (
     dummy_dec,
     CoinViewset,
     GiftRevenuViewset,
+    GiftAnalyticViewset
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -21,6 +22,7 @@ router.register(
     r"save-gift-payment-info", BuyGiftViewSet, basename="gift-payment-info"
 ),
 router.register(r"coin-info", CoinViewset, basename="coin-info")
+router.register(r"gift-analytics" , GiftAnalyticViewset ,basename="gift-payment-analysis")
 router.register(
     r"set-revenue-from-gift", GiftRevenuViewset, basename="set-revenue-from-gift"
 )
