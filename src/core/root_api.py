@@ -68,6 +68,10 @@ def api_root(request, format=None):
             "subscription-fee-list": reverse(
                 "subscription-fee-list", request=request, format=format
             ),
+            "subs-analytics": reverse(
+                "subs-analytics-list", request=request, format=format
+            ),
+           
             "schema-json": reverse("schema-json", request=request, format=format),
             # superapp
             "pay-with-super-app": reverse(

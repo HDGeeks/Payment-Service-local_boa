@@ -175,7 +175,7 @@ class GiftAnalyticViewset(ModelViewSet):
            user_identity = get_identity(user)
            # Per user
            per_user = Gift_Payment_info.objects.filter(
-               userId=user).values("userId", "payment_amount")
+               userId=user).order_by("created_at").values("userId", "payment_amount", "payment_method", "created_at")
            # total per user
            total_per_user = per_user.aggregate(
                total_per_user=Sum("payment_amount"))
