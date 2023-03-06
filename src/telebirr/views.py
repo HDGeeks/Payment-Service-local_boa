@@ -10,7 +10,8 @@ import environ
 from datetime import datetime
 from django.db.models import Sum
 from super_app.models import *
-
+import json
+from gift.identity import get_identity
 from .telebirrApi import Telebirr
 from .serializers import (
     Payment_info_serializer,
@@ -78,23 +79,6 @@ def notify(request):
         return Response(" only method post allowed .")
 
 
-# cred = credentials.Certificate(
-#     "/Users/hd/Desktop/kin-pay/pay-telebirr/serviceAccountKey.json")
-# firebase_admin.initialize_app(cred)
-
-
-# @api_view(['GET', 'POST', ])
-# def findUser(request):
-#     if not request.body:
-#         return Response("empty request body")
-
-#     #uid = request.body
-#     uid = "rZ44TdX7fBQ8hUZZDy2bRkTIcns1"
-#     user = user_info(uid)
-#     result = json.load(user)
-#     user.ge
-
-#     return Response(user)
 
 
 class SavePurchasePaymentViewSet(ModelViewSet):
@@ -127,6 +111,44 @@ class SavePurchasePaymentViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class PurchaseAnalyticViewset(ModelViewSet):
+    queryset = Payment_info.objects.all()
+    serializer_class = Payment_info_serializer
+
+    http_method_names = ['get', 'head']
+
+    def list(self, request, *args, **kwargs):
+        response = {}
+        data = json.loads(json.dumps(
+            super().list(request, *args, **kwargs).data["results"]))
+        # list of user_ids
+        list_of_users = []
+        for item in data:
+            list_of_users.append(item['userId'])
+
+        unique_user_ids = list(set(list_of_users))
+
+        response["count"] = unique_user_ids.__len__()
+        response["result"] = []
+        for user in unique_user_ids:
+           # get data from haile
+           user_identity = get_identity(user)
+           # Per user
+           per_user = Payment_info.objects.filter(
+               userId=user).values("userId", "payment_amount")
+           # total per user
+           total_per_user = per_user.aggregate(
+               total_per_user=Sum("payment_amount"))
+           # final result dictionary
+           final_result_dictionary = {}
+           final_result_dictionary['user_identity'] = user_identity
+           final_result_dictionary['per_user'] = per_user
+           final_result_dictionary['total_per_user'] = total_per_user
+           # append results to result
+           response["result"].append(final_result_dictionary)
+        return Response(response)
+    
+    
 class PurchaseWithTelebirrViewSet(ModelViewSet):
     queryset = Payment_info.objects.all()
     serializer_class = Payment_info_serializer
