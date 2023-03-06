@@ -23,6 +23,9 @@ def api_root(request, format=None):
             "payment-purchased-albums-list": reverse(
                 "purchased-albums-list", request=request, format=format
             ),
+            "purchase-analytics": reverse(
+                "purchase-analytics-list", request=request, format=format
+            ),
             "payment-notify-url": reverse(
                 "payment-notify-url", request=request, format=format
             ),
