@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-
+from .identity import get_identity
 from telebirr.decrypt import Decrypt
 
 from .models import Coin, Gift_Info, Gift_Payment_info, Gift_Revenue_Rate
@@ -123,18 +123,30 @@ class BuyGiftViewSet(ModelViewSet):
                         total_gift_payment_all_users=Sum("payment_amount")
                     )
                 )
-
+            elif user_id == "all_users":
+                return Response(
+                    Gift_Payment_info.objects.values("userId").annotate(
+                        total_amount_per_user=Sum("payment_amount")
+                    )
+                )
             else:
                 per_user = Gift_Payment_info.objects.filter(userId=user_id).values(
                     "userId", "payment_amount"
                 )
+                count=per_user.count()
                 total_per_user = per_user.aggregate(
                     total_per_user=Sum("payment_amount")
                 )
-            return Response(
-                {"per_user": per_user, "total_per_this_user": total_per_user},
-                status=status.HTTP_200_OK,
-            )
+                identity=get_identity(user=user_id)
+                if not identity:
+                    identity = " No info on this user ."
+
+                # result=[]
+                # result.append(per_user)
+                # result.append(total_per_user)
+                # result.append(identity)
+            return Response({"count": count, "result": {"per_user":per_user,"total_per_user":total_per_user,"identity":identity}}, status=status.HTTP_200_OK)
+        
 
         return Response(Gift_Payment_info.objects.all().values())
 
