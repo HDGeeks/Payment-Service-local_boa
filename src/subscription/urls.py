@@ -4,6 +4,7 @@ from .views import (
     notify,
     SubscribeWithTelebirrViewSet,
     SubscriptionFeeViewset,
+    SubsAnalyticViewset,
     subscribers_count,
 )
 from rest_framework import routers
@@ -16,6 +17,8 @@ router.register(
     r"subscription-fee", SubscriptionFeeViewset, basename="subscription-fee"
 )
 router.register(r"pay_to_subscribe", PaymentViewset, basename="pay_to_subscribe")
+router.register(r"subs-analytics", SubsAnalyticViewset,
+                basename="subs-analytics")
 router.register(
     r"subscribe_with_telebirr",
     SubscribeWithTelebirrViewSet,

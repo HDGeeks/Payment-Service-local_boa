@@ -18,6 +18,8 @@ from dateutil.relativedelta import *
 import environ
 from django.db.models import Sum
 from super_app.models import *
+import json
+from gift.identity import get_identity
 
 
 # Initialise environment variables
@@ -300,21 +302,50 @@ class PaymentViewset(ModelViewSet):
         else:
             return Response(Subscription_Payment_info.objects.all().values())
 
-    # def list(self, request, *args, **kwargs):
-    #     user = self.request.query_params.get('user')
-    #     if user is not None:
-    #         queryset = Subscription_Payment_info.objects.filter(
-    #             userId=user)
-    #         return Response(queryset)
-
-    #     else:
-    #         return Response(Subscription_Payment_info.objects.all().values())
+   
 
     def create(self, request, *args, **kwargs):
         if request.data["payment_method"] != "telebirr":
             return super().create(request, *args, **kwargs)
         return Response("telebirr payment is not saved using this api .")
 
+
+class SubsAnalyticViewset(ModelViewSet):
+
+    queryset = Subscription_Payment_info.objects.all()
+    serializer_class = Subscription_payment_serializer
+    http_method_names = ['get', 'head']
+
+    def list(self, request, *args, **kwargs):
+        response = {}
+        data = json.loads(json.dumps(
+            super().list(request, *args, **kwargs).data["results"]))
+        # list of user_ids
+        list_of_users = []
+        for item in data:
+            list_of_users.append(item['userId'])
+
+        unique_user_ids = list(set(list_of_users))
+
+        response["count"] = unique_user_ids.__len__()
+        response["result"] = []
+        for user in unique_user_ids:
+           # get data from haile
+           user_identity = get_identity(user)
+           # Per user
+           per_user = Subscription_Payment_info.objects.filter(
+               userId=user).values("userId", "payment_amount")
+           # total per user
+           total_per_user = per_user.aggregate(
+               total_per_user=Sum("payment_amount"))
+           # final result dictionary
+           final_result_dictionary = {}
+           final_result_dictionary['user_identity'] = user_identity
+           final_result_dictionary['per_user'] = per_user
+           final_result_dictionary['total_per_user'] = total_per_user
+           # append results to result
+           response["result"].append(final_result_dictionary)
+        return Response(response)
 
 class SubscribeWithTelebirrViewSet(ModelViewSet):
     serializer_class = Subscription_payment_serializer
