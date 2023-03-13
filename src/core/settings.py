@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "core",
     "gift",
     "subscription",
-    "abyssinia",
     "super_app",
 ]
 
