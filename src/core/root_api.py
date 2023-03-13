@@ -11,9 +11,9 @@ def api_root(request, format=None):
             "payment-purchase-with-telebirr-list": reverse(
                 "purchase-with-telebirr-list", request=request, format=format
             ),
-            "payment-with-boa": reverse(
-                "purchase-with-boa-list", request=request, format=format
-            ),
+            # "payment-with-boa": reverse(
+            #     "purchase-with-boa-list", request=request, format=format
+            # ),
             "payment-info-list": reverse(
                 "payment-info-list", request=request, format=format
             ),

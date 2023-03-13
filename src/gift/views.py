@@ -1,5 +1,3 @@
-import random
-import string
 import json
 
 import environ
@@ -9,8 +7,11 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from .identity import get_identity
-from telebirr.decrypt import Decrypt
+
+from utilities import generate_nonce
+from utilities.identity import get_identity
+
+
 
 from .models import Coin, Gift_Info, Gift_Payment_info, Gift_Revenue_Rate
 from .serializers import (
@@ -19,8 +20,9 @@ from .serializers import (
     Gift_payment_serializer,
     Gift_revenue_rate_serializer,
 )
-from .telebirrApi import Telebirr
-
+#from .telebirrApi import Telebirr
+from utilities.telebirrApi import Telebirr
+from utilities.send_to_telebirr import send_to_telebirr
 # Initialise environment variables
 env = environ.Env()
 environ.Env.read_env()
@@ -222,9 +224,10 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
                 outtrade = ""
                 outtrade = generate_nonce(16)
                 nonce = generate_nonce(16)
+                notify_type="gift"
 
                 amount = request.data["payment_amount"]
-                pay = send_to_telebirr(amount, nonce, outtrade)
+                pay = send_to_telebirr(amount, nonce, outtrade,notify_type)
 
                 if pay["message"] == "Operation successful":
                     current_amount = 0
@@ -258,30 +261,6 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
                 return Response({"error message": str(e)})
 
         return Response({"msg": " payment method is not telebirr"})
-
-    # def update(self, request, *args, **kwargs):
-    #     if request.data['payment_method'] == "telebirr":
-    #         try:
-    #             nonce = ''
-    #             outtrade = ''
-    #             outtrade = generate_nonce(16)
-    #             nonce = generate_nonce(16)
-    #             amount = request.data['payment_amount']
-    #             pay = send_to_telebirr(amount, nonce, outtrade)
-    #             if pay['message'] == 'Operation successful':
-
-    #                 update = Gift_Payment_info.objects.filter(
-    #                     userId=request.data['userId']).update(outTradeNo=outtrade)
-
-    #                 updated = Gift_Payment_info.objects.filter(
-    #                     userId=request.data['userId']).values()
-    #                 return Response({"Telebirr_Response": pay, "Data": updated})
-
-    #             return Response({"message": pay['message'], 'status': status.HTTP_400_BAD_REQUEST, })
-
-    #         except BaseException as e:
-    #             return Response({'error message': str(e)})
-    #     return Response({'msg': ' payment method is not telebirr'})
 
 
 class GiveGiftArtistViewset(ModelViewSet):
@@ -334,37 +313,29 @@ class GiveGiftArtistViewset(ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def send_to_telebirr(amount, nonce, outtrade):
-    # Initialise environment variables
-    env = environ.Env()
-    environ.Env.read_env()
+# def send_to_telebirr(amount, nonce, outtrade):
+#     # Initialise environment variables
+#     env = environ.Env()
+#     environ.Env.read_env()
 
-    telebirr = Telebirr(
-        app_id=env("App_ID"),
-        app_key=env("App_Key"),
-        public_key=env("Public_Key"),
-        notify_url="https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/gift/notify-url",
-        receive_name="Zema Multimedia PLC ",
-        return_url="https://zemamultimedia.com",
-        short_code=env("Short_Code"),
-        subject="Media content",
-        timeout_express="30",
-        total_amount=amount,
-        nonce=nonce,
-        out_trade_no=outtrade,
-    )
+#     telebirr = Telebirr(
+#         app_id=env("App_ID"),
+#         app_key=env("App_Key"),
+#         public_key=env("Public_Key"),
+#         notify_url="https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/gift/notify-url",
+#         receive_name="Zema Multimedia PLC ",
+#         return_url="https://zemamultimedia.com",
+#         short_code=env("Short_Code"),
+#         subject="Media content",
+#         timeout_express="30",
+#         total_amount=amount,
+#         nonce=nonce,
+#         out_trade_no=outtrade,
+#     )
 
-    return telebirr.send_request()
-
-
-def decrypt_response_from_telebirr(message):
-    responded_data = Decrypt(message=message)
-    return responded_data
+#     return telebirr.send_request()
 
 
-def generate_nonce(length):
-    result_str = "".join(
-        random.choices(string.ascii_uppercase +
-                       string.digits + string.digits, k=length)
-    )
-    return result_str
+
+
+
