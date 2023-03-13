@@ -115,7 +115,16 @@ class SubscriptionFeeViewset(ModelViewSet):
     serializer_class = Subscription_fee_serializer
     queryset = SubscriptionFee.objects.all()
 
-
+    def list(self, request, *args, **kwargs):
+        sub_fee = self.request.query_params.get("subFee")
+        if sub_fee:
+            if sub_fee == "all":
+                return Response(self.queryset.values())
+        return Response(self.queryset.values().order_by('-created_at')[0])
+        
+ 
+      
+        #return super().get_queryset()
 class SubscriptionViewset(ModelViewSet):
     serializer_class = subscriptionSerializer
     queryset = Subscription.objects.all()
