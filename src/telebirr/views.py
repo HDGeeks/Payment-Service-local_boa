@@ -12,7 +12,10 @@ from django.db.models import Sum
 from super_app.models import *
 import json
 from utilities.identity import get_identity
-from .telebirrApi import Telebirr
+from utilities.telebirrApi import Telebirr
+from utilities.send_to_telebirr import send_to_telebirr
+from utilities.generate_nonce import generate_nonce
+
 from .serializers import (
     Payment_info_serializer,
     Purcahsed_album_serializer,
@@ -25,10 +28,9 @@ from .models import (
     Purcahsed_track,
     TrackRevenueRatePercentage,
 )
-from telebirr.decrypt import Decrypt
+
 import logging
-import random
-import string
+
 from .abyssinia import Abyssinia
 
 
@@ -159,11 +161,10 @@ class PurchaseWithTelebirrViewSet(ModelViewSet):
                 nonce = ""
                 outtrade = ""
                 outtrade = generate_nonce(16)
-                print(outtrade)
                 nonce = generate_nonce(16)
-
+                notify_type = "purchase"
                 amount = request.data["payment_amount"]
-                pay = send_to_telebirr(amount, nonce, outtrade)
+                pay = send_to_telebirr(amount, nonce, outtrade ,notify_type)
                 if pay["message"] == "Operation successful":
                     content = {
                         "userId": request.data["userId"],
@@ -415,38 +416,4 @@ class PurchasedTracksViewset(ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-def send_to_telebirr(amount, nonce, outtrade):
-    # Initialise environment variables
-    env = environ.Env()
-    environ.Env.read_env(DEBUG=(bool, False))
 
-    telebirr = Telebirr(
-        app_id=env("App_ID"),
-        app_key=env("App_Key"),
-        public_key=env("Public_Key"),
-        notify_url="https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/payment/payment-notify-url",
-        receive_name="Zema Multimedia PLC",
-        return_url="https://zemamultimedia.com",
-        short_code=env("Short_Code"),
-        subject="Media content",
-        timeout_express="30",
-        total_amount=amount,
-        nonce=nonce,
-        out_trade_no=outtrade,
-    )
-
-    return telebirr.send_request()
-
-
-def decrypt_response_from_telebirr(message):
-    responded_data = Decrypt(message=message)
-    return responded_data
-
-
-def generate_nonce(length):
-    result_str = "".join(
-        random.choices(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits, k=length
-        )
-    )
-    return result_str

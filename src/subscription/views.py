@@ -1,26 +1,28 @@
-import dataclasses
-from rest_framework.viewsets import ModelViewSet
-from .serializers import (
-    subscriptionSerializer,
-    Subscription_payment_serializer,
-    Subscription_fee_serializer,
-)
-from .models import Subscription, Subscription_Payment_info, SubscriptionFee
-from rest_framework.response import Response
-import string
-from rest_framework import status
-from .telebirrApi import Telebirr
-from rest_framework.decorators import api_view
-from django.views.decorators.csrf import csrf_exempt
-import random
-from datetime import datetime, timedelta, date
-from dateutil.relativedelta import *
-import environ
-from django.db.models import Sum
-from super_app.models import *
 import json
-from utilities.identity import get_identity
+import environ
 
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import *
+
+from django.db.models import Sum
+from django.views.decorators.csrf import csrf_exempt
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+from super_app.models import *
+
+from utilities.identity import get_identity
+from utilities.telebirrApi import Telebirr
+from utilities.send_to_telebirr import send_to_telebirr
+from utilities.generate_nonce import generate_nonce
+
+from .models import Subscription, Subscription_Payment_info, SubscriptionFee
+from .serializers import (Subscription_fee_serializer,
+                          Subscription_payment_serializer,
+                          subscriptionSerializer)
 
 # Initialise environment variables
 env = environ.Env()
@@ -366,11 +368,11 @@ class SubscribeWithTelebirrViewSet(ModelViewSet):
                 nonce = ""
                 outtrade = ""
                 outtrade = generate_nonce(16)
-                print(outtrade)
+               
                 nonce = generate_nonce(16)
-
                 amount = request.data["payment_amount"]
-                pay = send_to_telebirr(amount, nonce, outtrade)
+                notify_type="subs"
+                pay = send_to_telebirr(amount, nonce, outtrade,notify_type)
                 if pay["message"] == "Operation successful":
                     content = {
                         "userId": request.data["userId"],
@@ -406,39 +408,6 @@ class SubscribeWithTelebirrViewSet(ModelViewSet):
             )
 
 
-def send_to_telebirr(amount, nonce, outtrade):
-    # Initialise environment variables
-    env = environ.Env()
-    environ.Env.read_env(DEBUG=(bool, False))
-
-    telebirr = Telebirr(
-        app_id=env("App_ID"),
-        app_key=env("App_Key"),
-        public_key=env("Public_Key"),
-        notify_url="https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/subscription/subscribe-notify-url",
-        receive_name="Zema Multimedia PLC",
-        return_url="https://zemamultimedia.com",
-        short_code=env("Short_Code"),
-        subject="Media content",
-        timeout_express="30",
-        total_amount=amount,
-        nonce=nonce,
-        out_trade_no=outtrade,
-    )
-
-    return telebirr.send_request()
 
 
-# def decrypt_response_from_telebirr(message):
-#     responded_data = Decrypt(
-#         message=message)
-#     return responded_data
 
-
-def generate_nonce(length):
-    result_str = "".join(
-        random.choices(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits, k=length
-        )
-    )
-    return result_str
