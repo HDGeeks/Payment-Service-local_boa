@@ -3,26 +3,23 @@ import json
 import environ
 from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from utilities import generate_nonce
+from utilities.generate_nonce import generate_nonce
 from utilities.identity import get_identity
+from utilities.send_to_telebirr import send_to_telebirr
 
-
+from utilities.telebirrApi import Telebirr
 
 from .models import Coin, Gift_Info, Gift_Payment_info, Gift_Revenue_Rate
-from .serializers import (
-    Coin_info_serializer,
-    Gift_info_serializer,
-    Gift_payment_serializer,
-    Gift_revenue_rate_serializer,
-)
-#from .telebirrApi import Telebirr
-from utilities.telebirrApi import Telebirr
-from utilities.send_to_telebirr import send_to_telebirr
+from .serializers import (Coin_info_serializer, Gift_info_serializer,
+                          Gift_payment_serializer,
+                          Gift_revenue_rate_serializer)
+
 # Initialise environment variables
 env = environ.Env()
 environ.Env.read_env()

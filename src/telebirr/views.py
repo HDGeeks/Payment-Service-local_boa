@@ -11,7 +11,7 @@ from datetime import datetime
 from django.db.models import Sum
 from super_app.models import *
 import json
-from gift.identity import get_identity
+from utilities.identity import get_identity
 from .telebirrApi import Telebirr
 from .serializers import (
     Payment_info_serializer,
