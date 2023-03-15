@@ -1,40 +1,28 @@
-from unittest import result
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.core.mail import send_mail
-from rest_framework.decorators import api_view
-import environ
-from datetime import datetime
-from django.db.models import Sum
-from super_app.models import *
 import json
-from utilities.identity import get_identity
-from utilities.telebirrApi import Telebirr
-from utilities.send_to_telebirr import send_to_telebirr
+import environ
+
+from django.db.models import Sum
+from django.views.decorators.csrf import csrf_exempt
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+from super_app.models import *
+
 from utilities.generate_nonce import generate_nonce
+from utilities.identity import get_identity
+from utilities.send_to_telebirr import send_to_telebirr
+from utilities.telebirrApi import Telebirr
 
-from .serializers import (
-    Payment_info_serializer,
-    Purcahsed_album_serializer,
-    Purcahsed_track_serializer,
-    Track_revenue_rate_serializer,
-)
-from .models import (
-    Payment_info,
-    Purcahsed_album,
-    Purcahsed_track,
-    TrackRevenueRatePercentage,
-)
-
-import logging
-
-from .abyssinia import Abyssinia
+from .models import (Payment_info, Purcahsed_album, Purcahsed_track,
+                     TrackRevenueRatePercentage)
+from .serializers import (Payment_info_serializer, Purcahsed_album_serializer,
+                          Purcahsed_track_serializer,
+                          Track_revenue_rate_serializer)
 
 
-logger = logging.getLogger(__name__)
 # Initialise environment variables
 env = environ.Env()
 environ.Env.read_env(DEBUG=(bool, False))
@@ -49,9 +37,7 @@ environ.Env.read_env(DEBUG=(bool, False))
 @csrf_exempt
 def notify(request):
     if request.method == "POST":
-        # if not request.body:
-        #     return Response("The request object (request.body) is empty .")
-        # else:
+       
 
         decrypted_data = Telebirr.decrypt(
             public_key=env("Public_Key"), payload=request.body
