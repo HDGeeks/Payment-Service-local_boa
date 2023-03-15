@@ -80,7 +80,7 @@ urlpatterns = [
     path("tests/", include(router.urls)),
     # path("paypal/", include("paypal.urls")),
     path("subscription/", include("subscription.urls")),
-    #path("boa/", include("abyssinia.urls")),
+    # path("boa/", include("abyssinia.urls")),
     # API documentation urls
     path(
         "swagger/",

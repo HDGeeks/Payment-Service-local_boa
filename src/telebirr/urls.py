@@ -26,8 +26,9 @@ router.register(
     PurchaseWithTelebirrViewSet,
     basename="purchase-with-telebirr",
 )
-router.register(r"purchase-analytics", PurchaseAnalyticViewset,
-                basename="purchase-analytics")
+router.register(
+    r"purchase-analytics", PurchaseAnalyticViewset, basename="purchase-analytics"
+)
 router.register(
     r"set-track-revenue-rate", TrackRevenueViewset, basename="set-track-revenue-rate"
 )

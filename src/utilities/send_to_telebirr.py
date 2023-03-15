@@ -1,14 +1,14 @@
 from utilities.telebirrApi import Telebirr
 import environ
 from rest_framework.response import Response
+
 # Initialise environment variables
 env = environ.Env()
 environ.Env.read_env()
 
 
 def send_to_telebirr(amount, nonce, outtrade, notify_type):
-
-    notify_url = ''
+    notify_url = ""
     gift_notify_url = "https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/gift/notify-url"
     sub_notify_url = "https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/subscription/subscribe-notify-url"
     purchase_notify_url = "https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/payment/payment-notify-url"

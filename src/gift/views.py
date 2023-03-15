@@ -16,9 +16,12 @@ from utilities.send_to_telebirr import send_to_telebirr
 from utilities.telebirrApi import Telebirr
 
 from .models import Coin, Gift_Info, Gift_Payment_info, Gift_Revenue_Rate
-from .serializers import (Coin_info_serializer, Gift_info_serializer,
-                          Gift_payment_serializer,
-                          Gift_revenue_rate_serializer)
+from .serializers import (
+    Coin_info_serializer,
+    Gift_info_serializer,
+    Gift_payment_serializer,
+    Gift_revenue_rate_serializer,
+)
 
 # Initialise environment variables
 env = environ.Env()
@@ -44,15 +47,13 @@ def notify(request):
             # capture the existing amount
             if current.exists():
                 # existing amount
-                current_amount = current.values("payment_amount")[
-                    0]["payment_amount"]
+                current_amount = current.values("payment_amount")[0]["payment_amount"]
 
                 # user of the outtrade number
                 current_user = current.values("userId")[0]["userId"]
 
                 # perform addition of the current amount with total amount
-                new_amount = current_amount + \
-                    int(decrypted_data["totalAmount"])
+                new_amount = current_amount + int(decrypted_data["totalAmount"])
 
                 # update the row with new info in gift payment table
                 update_data = Gift_Payment_info.objects.filter(
@@ -74,8 +75,7 @@ def notify(request):
                 # calculate the new coin
                 new_coin = current_coin + int(decrypted_data["totalAmount"])
                 # update the new amount
-                Coin.objects.filter(userId=current_user).update(
-                    total_coin=new_coin)
+                Coin.objects.filter(userId=current_user).update(total_coin=new_coin)
 
                 # return Response({"Decrypted_Data": decrypted_data, "Updated_Data": updated_data})
                 return Response({"code": 0, "msg": "success"})
@@ -117,11 +117,10 @@ class BuyGiftViewSet(ModelViewSet):
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 
-    
     def list(self, request, *args, **kwargs):
         user_id = self.request.query_params.get("user")
         if user_id:
-            count=Gift_Payment_info.objects.all().count()
+            count = Gift_Payment_info.objects.all().count()
             if user_id == "all":
                 return Response(
                     Gift_Payment_info.objects.aggregate(
@@ -142,50 +141,64 @@ class BuyGiftViewSet(ModelViewSet):
                 total_per_user = per_user.aggregate(
                     total_per_user=Sum("payment_amount")
                 )
-                identity=get_identity(user=user_id)
+                identity = get_identity(user=user_id)
                 if not identity:
                     identity = " No info on this user ."
 
-            return Response({"count": "count", "result": {"per_user":per_user,"total_per_user":total_per_user,"identity":identity}}, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "count": "count",
+                    "result": {
+                        "per_user": per_user,
+                        "total_per_user": total_per_user,
+                        "identity": identity,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
 
-        return Response(Gift_Payment_info.objects.all().order_by('userId').values())
-    
+        return Response(Gift_Payment_info.objects.all().order_by("userId").values())
+
 
 class GiftAnalyticViewset(ModelViewSet):
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
-    http_method_names =['get','head']
+    http_method_names = ["get", "head"]
 
     def list(self, request, *args, **kwargs):
         response = {}
-        data = json.loads(json.dumps(
-            super().list(request, *args, **kwargs).data["results"]))
+        data = json.loads(
+            json.dumps(super().list(request, *args, **kwargs).data["results"])
+        )
         # list of user_ids
         list_of_users = []
         for item in data:
-            list_of_users.append(item['userId'])
-      
+            list_of_users.append(item["userId"])
+
         unique_user_ids = list(set(list_of_users))
-       
+
         response["count"] = unique_user_ids.__len__()
         response["result"] = []
         for user in unique_user_ids:
-           # get data from haile
-           user_identity = get_identity(user)
-           # Per user
-           per_user = Gift_Payment_info.objects.filter(
-               userId=user).order_by("created_at").values("userId", "payment_amount", "payment_method", "created_at")
-           # total per user
-           total_per_user = per_user.aggregate(
-               total_per_user=Sum("payment_amount"))
-           # final result dictionary
-           final_result_dictionary = {}
-           final_result_dictionary['user_identity'] = user_identity
-           final_result_dictionary['per_user'] = per_user
-           final_result_dictionary['total_per_user'] = total_per_user
-           # append results to result
-           response["result"].append(final_result_dictionary)
+            # get data from haile
+            user_identity = get_identity(user)
+            # Per user
+            per_user = (
+                Gift_Payment_info.objects.filter(userId=user)
+                .order_by("created_at")
+                .values("userId", "payment_amount", "payment_method", "created_at")
+            )
+            # total per user
+            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
+            # final result dictionary
+            final_result_dictionary = {}
+            final_result_dictionary["user_identity"] = user_identity
+            final_result_dictionary["per_user"] = per_user
+            final_result_dictionary["total_per_user"] = total_per_user
+            # append results to result
+            response["result"].append(final_result_dictionary)
         return Response(response)
+
 
 class CoinViewset(ModelViewSet):
     queryset = Coin.objects.all()
@@ -221,10 +234,10 @@ class TelebirrGiftPaymentViewset(ModelViewSet):
                 outtrade = ""
                 outtrade = generate_nonce(16)
                 nonce = generate_nonce(16)
-                notify_type="gift"
+                notify_type = "gift"
 
                 amount = request.data["payment_amount"]
-                pay = send_to_telebirr(amount, nonce, outtrade,notify_type)
+                pay = send_to_telebirr(amount, nonce, outtrade, notify_type)
 
                 if pay["message"] == "Operation successful":
                     current_amount = 0
@@ -331,8 +344,3 @@ class GiveGiftArtistViewset(ModelViewSet):
 #     )
 
 #     return telebirr.send_request()
-
-
-
-
-

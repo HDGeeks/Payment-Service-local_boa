@@ -43,7 +43,9 @@ def api_root(request, format=None):
                 "give-gift-list", request=request, format=format
             ),
             "coin-info-list": reverse("coin-info-list", request=request, format=format),
-            "gift-payment-analysis": reverse("gift-payment-analysis-list",request=request,format=format),
+            "gift-payment-analysis": reverse(
+                "gift-payment-analysis-list", request=request, format=format
+            ),
             "gift-notify": reverse("notify-url", request=request, format=format),
             "gift-dummy-notify-test": reverse(
                 "dummy-notify-url", request=request, format=format
@@ -71,7 +73,6 @@ def api_root(request, format=None):
             "subs-analytics": reverse(
                 "subs-analytics-list", request=request, format=format
             ),
-           
             "schema-json": reverse("schema-json", request=request, format=format),
             # superapp
             "pay-with-super-app": reverse(

@@ -81,8 +81,6 @@ def notify(request):
         return Response(" only method post allowed .")
 
 
-
-
 class SavePurchasePaymentViewSet(ModelViewSet):
     """
     This view make and external api call,
@@ -117,40 +115,41 @@ class PurchaseAnalyticViewset(ModelViewSet):
     queryset = Payment_info.objects.all()
     serializer_class = Payment_info_serializer
 
-    http_method_names = ['get', 'head']
+    http_method_names = ["get", "head"]
 
     def list(self, request, *args, **kwargs):
         response = {}
-        data = json.loads(json.dumps(
-            super().list(request, *args, **kwargs).data["results"]))
+        data = json.loads(
+            json.dumps(super().list(request, *args, **kwargs).data["results"])
+        )
         # list of user_ids
         list_of_users = []
         for item in data:
-            list_of_users.append(item['userId'])
+            list_of_users.append(item["userId"])
 
         unique_user_ids = list(set(list_of_users))
 
         response["count"] = unique_user_ids.__len__()
         response["result"] = []
         for user in unique_user_ids:
-           # get data from haile
-           user_identity = get_identity(user)
-           # Per user
-           per_user = Payment_info.objects.filter(
-               userId=user).values("userId", "payment_amount")
-           # total per user
-           total_per_user = per_user.aggregate(
-               total_per_user=Sum("payment_amount"))
-           # final result dictionary
-           final_result_dictionary = {}
-           final_result_dictionary['user_identity'] = user_identity
-           final_result_dictionary['per_user'] = per_user
-           final_result_dictionary['total_per_user'] = total_per_user
-           # append results to result
-           response["result"].append(final_result_dictionary)
+            # get data from haile
+            user_identity = get_identity(user)
+            # Per user
+            per_user = Payment_info.objects.filter(userId=user).values(
+                "userId", "payment_amount"
+            )
+            # total per user
+            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
+            # final result dictionary
+            final_result_dictionary = {}
+            final_result_dictionary["user_identity"] = user_identity
+            final_result_dictionary["per_user"] = per_user
+            final_result_dictionary["total_per_user"] = total_per_user
+            # append results to result
+            response["result"].append(final_result_dictionary)
         return Response(response)
-    
-    
+
+
 class PurchaseWithTelebirrViewSet(ModelViewSet):
     queryset = Payment_info.objects.all()
     serializer_class = Payment_info_serializer
@@ -164,7 +163,7 @@ class PurchaseWithTelebirrViewSet(ModelViewSet):
                 nonce = generate_nonce(16)
                 notify_type = "purchase"
                 amount = request.data["payment_amount"]
-                pay = send_to_telebirr(amount, nonce, outtrade ,notify_type)
+                pay = send_to_telebirr(amount, nonce, outtrade, notify_type)
                 if pay["message"] == "Operation successful":
                     content = {
                         "userId": request.data["userId"],
@@ -414,6 +413,3 @@ class PurchasedTracksViewset(ModelViewSet):
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-
