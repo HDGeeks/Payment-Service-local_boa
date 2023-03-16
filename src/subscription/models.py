@@ -1,13 +1,10 @@
-from datetime import date, datetime, timedelta
-from django.utils import timezone
 from dateutil.relativedelta import *
-
 from django.db import models
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from django.core.mail import send_mail
-
+from super_app.models import Superapp_Payment_info
 
 class Abstarct(models.Model):
     created_at = models.DateTimeField(auto_now=True)
@@ -49,7 +46,9 @@ class Subscription_Payment_info(Abstarct):
 class Subscription(Abstarct):
     SUBSCRIPTION_TYPE = (("MONTHLY", "monthly"), ("YEARLY", "yearly"))
     user_id = models.CharField(max_length=255, blank=False, null=True)
-    payment_id = models.ForeignKey(Subscription_Payment_info, on_delete=models.PROTECT)
+    payment_id = models.ForeignKey(Subscription_Payment_info, on_delete=models.PROTECT,null=True)
+    payment_id_from_superapp = models.ForeignKey(
+        Superapp_Payment_info, on_delete=models.PROTECT ,null=True)
 
     subscription_date = models.DateTimeField(auto_now=True)
     paid_until = models.DateTimeField(null=False, blank=True)

@@ -34,6 +34,7 @@ class subscriptionSerializer(ModelSerializer):
             "id",
             "user_id",
             "payment_id",
+            "payment_id_from_superapp",
             "sub_type",
             "subscription_date",
             "paid_until",

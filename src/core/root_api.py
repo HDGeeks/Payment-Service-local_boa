@@ -75,10 +75,10 @@ def api_root(request, format=None):
             ),
             "schema-json": reverse("schema-json", request=request, format=format),
             # superapp
-            "pay-with-super-app": reverse(
+            "superApp-pay-with-super-app": reverse(
                 "pay-with-super-app-list", request=request, format=format
             ),
-            "check-superapp-payment": reverse(
+            "superAppcheck-superapp-payment": reverse(
                 "check-superapp-payment-list", request=request, format=format
             ),
         }
