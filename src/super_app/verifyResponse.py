@@ -1,7 +1,3 @@
-import requests
-from . import applyFabricToken
-import json
-from . import tools
 from . import tools
 
 
@@ -12,14 +8,25 @@ class VerifyResponseService:
         self.req = req
 
     def verifyResponse(self):
-        data = self.req
-        payload = self.createRequestObject(data)
-        # print(rawRequest)
+        payload = self.createRequestObject()
+
         return payload
 
-    def createRequestObject(self, data):
-        sign = data.pop([sign])
-        result = tools.verify(data)
+    def createRequestObject(self):
+        data = self.req
+        clean_data = {
+            "appid": data["appid"],
+            "merchCode": data["merch_code"],
+            "merchOrderId": data["merch_order_id"],
+            "notifyTime": data["notify_time"],
+            "notifyUrl": data["notify_url"],
+            "paymentOrderId": data["payment_order_id"],
+            "totalAmount": data["total_amount"],
+            "tradeStatus": data["trade_status"],
+            "transCurrency": data["trans_currency"],
+            "transEndTime": data["trans_end_time"],
+        }
+        sign = data.pop("sign")
+        result = tools.verify(clean_data, sign)
 
-        # print(json.dumps(req))
         return result

@@ -21,7 +21,7 @@ class CreateOrderService:
         self.appSecret = appSecret
         self.merchantAppId = merchantAppId
         self.merchantCode = merchantCode
-        self.notify_path = "https://superapp.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/subscription/super-app-notify-url"
+        self.notify_path = "http://superapp.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/subscription/super-app-notify-url"
 
     def createOrder(self):
         merch_order_id = self.req["merch_order_id"]
@@ -82,6 +82,9 @@ class CreateOrderService:
             "total_amount": amount,
             "trans_currency": currency,
             "timeout_express": "3m",
+            "payee_identifier": self.merchantCode,
+            "payee_identifier_type": "04",
+            "payee_type": "5000",
         }
         req["biz_content"] = biz
         sign = tools.sign(req)
@@ -97,12 +100,12 @@ class CreateOrderService:
             "nonce_str": tools.createNonceStr(),
             "prepay_id": prepayId,
             "timestamp": tools.createTimeStamp(),
-            "sign_type": "SHA256WithRSA",
         }
         rawRequest = ""
         for key in maps:
             value = maps[key]
             rawRequest = rawRequest + key + "=" + value + "&"
         sign = tools.sign(maps)
-        rawRequest = rawRequest + "sign=" + sign
+        sign_type = "SHA256WithRSA"
+        rawRequest = rawRequest + "sign=" + sign + "&" + "sign_type=" + sign_type
         return rawRequest

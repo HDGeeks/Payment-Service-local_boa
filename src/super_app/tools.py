@@ -1,19 +1,22 @@
-import random
-import uuid
-import re
-import time
 import base64
 import json
-from Crypto.PublicKey import RSA
-from Crypto.Hash import SHA256
-from Crypto.Signature import pss
-from base64 import b64decode, b64encode
-from Crypto.Cipher import PKCS1_v1_5
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.serialization import load_der_public_key
-from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
+import random
+import re
 import string
+import time
+import uuid
+from base64 import b64decode, b64encode
+
 import environ
+from Crypto.Cipher import PKCS1_v1_5
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
+from Crypto.Signature import pss
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
+from cryptography.hazmat.primitives.serialization import load_der_public_key
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 
 env = environ.Env()
 environ.Env.read_env(DEBUG=(bool, False))
@@ -58,9 +61,8 @@ def SignWithRSA(data, key, sign_type="SHA256withRSA"):
         return "Only allowed to the type SHA256withRSA hash"
 
 
-def verify(request):
-    # publicKey = env("public_key")
-    publicKey = env("private_key")
+def verify(request, sign):
+    publicKey = env("ET_public_key")
     exclude_fields = [
         "sign",
         "sign_type",
@@ -70,7 +72,7 @@ def verify(request):
         "raw_request",
     ]
     join = []
-    signature = request.pop["sign"]
+    signature = sign
     for key in request:
         if key in exclude_fields:
             continue
@@ -82,8 +84,8 @@ def verify(request):
             join.append(key + "=" + request[key])
     join.sort()
     separator = "&"
-    inputString = str(separator.join(join))
-    return VerifyWithRSA(inputString, publicKey, signature, "SHA256withRSA")
+    message = str(separator.join(join))
+    return VerifyWithRSA(message, publicKey, signature, "SHA256withRSA")
 
 
 def VerifyWithRSA(
@@ -98,10 +100,20 @@ def VerifyWithRSA(
         mesage_hash = SHA256.new(message.encode("utf-8"))
         verifier = pss.new(rsa_key)
         try:
-            verifier.verify(mesage_hash, decoded_signature)
-            return True
+            verifier.verify(
+                mesage_hash,
+                decoded_signature,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH,
+                ),
+                hashes.SHA256(),
+            )
+
         except (ValueError, TypeError):
             return False
+
+        return True
 
     else:
         return "Only allowed to the type SHA256withRSA hash"
@@ -122,35 +134,3 @@ def createNonceStr():
         )
     )
     return result_str
-
-
-# class Decrypt:
-#     def __init__(self, message):
-#         self.message = message
-#         self.result = decode(message)
-
-
-def decrypt(public_key, payload):
-    public_key = re.sub("(.{64})", "\\1\n", public_key.replace("\n", ""), 0, re.DOTALL)
-    public_key = "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----\n".format(
-        public_key
-    )
-    b64data = "\n".join(public_key.splitlines()[1:-1])
-    key = load_der_public_key(base64.b64decode(b64data), default_backend())
-
-    signature = base64.b64decode(payload)
-    decrypted = b""
-    for i in range(0, len(signature), 256):
-        partial = key.recover_data_from_signature(
-            signature[i : i + 256 if i + 256 < len(signature) else len(signature)],
-            PKCS1v15(),
-            None,
-        )
-        decrypted += partial
-        print(decrypted)
-
-        try:
-            data_json = json.loads(decrypted)
-            return data_json
-        except json.JSONDecodeError:
-            return f"this is empty json"

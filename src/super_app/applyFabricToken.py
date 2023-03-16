@@ -28,5 +28,5 @@ class ApplyFabricTokenService:
             data=data,
             verify=False,
         )
-    
+
         return authToken.json()

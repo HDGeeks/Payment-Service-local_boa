@@ -1,6 +1,3 @@
-from datetime import date, datetime, timedelta
-from django.utils import timezone
-from dateutil.relativedelta import *
 from django.db import models
 
 

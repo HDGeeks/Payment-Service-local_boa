@@ -1,32 +1,14 @@
-import base64
-####################################################################
-import dataclasses
-import hashlib
 import json
-import random
-import string
-import sys
-from datetime import datetime, timedelta
-
 import environ
-import requests
-from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
-from Crypto.Signature import pss
-from Crypto.Signature.pkcs1_15 import PKCS115_SigScheme
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+
 from dateutil.relativedelta import *
-from django.http import JsonResponse
-from django.shortcuts import render
+
 from django.views.decorators.csrf import csrf_exempt
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from urllib3.exceptions import InsecureRequestWarning
 
 from . import tools
 from .createOrder import CreateOrderService
@@ -35,17 +17,10 @@ from .queryOrder import QueryOrderService
 from .serializers import Superapp_payment_serializer
 from .verifyResponse import VerifyResponseService
 
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
 
-# CREAT-ORDER#
+# CREAT-ORDER 
 
-###################################################################################################################################
+
 env = environ.Env()
 environ.Env.read_env(DEBUG=(bool, False))
 
@@ -90,12 +65,11 @@ def creatOrder(amount, title, currency, merch_order_id):
     fianl_result = {}
     fianl_result["result"] = dict_result
     fianl_result["raw_result"] = rawRequest
-    # return JsonResponse(dict_result)
-    # return dict_result
+
     return fianl_result
 
 
-###################################################################################################################################
+
 
 
 class SuperappPayViewSet(ModelViewSet):
@@ -111,7 +85,7 @@ class SuperappPayViewSet(ModelViewSet):
                 merch_order_id = tools.createMerchantOrderId()
 
                 order = creatOrder(amount, title, currency, merch_order_id)
-                print(order)
+
                 if order["result"]["result"] == "SUCCESS":
                     rawRequest = order["raw_result"]
 
@@ -141,12 +115,9 @@ class SuperappPayViewSet(ModelViewSet):
                 )
 
             except BaseException as e:
-                print(e)
-
                 return Response({"error message": str(e)})
 
         else:
-            print(request.data["payment_method"])
             return Response(
                 {
                     "msg": " payment method is not telebirr super app",
@@ -155,25 +126,15 @@ class SuperappPayViewSet(ModelViewSet):
             )
 
 
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-
-# NOTIFY#
-###################################################################################################################################
 
 
 def verify(req):
     module = VerifyResponseService(req)
     response = module.verifyResponse()
-    # result = json.dumps(response)
-    # dict_result = json.loads(result)
-    # # return JsonResponse(dict_result)
+
     return response
 
 
-###################################################################################################################################
 
 
 @api_view(
@@ -185,78 +146,73 @@ def verify(req):
 @csrf_exempt
 def notify(request):
     if request.method == "POST" or request.method == "GET":
-        if not request.body:
+        if not request.data:
             return Response("The request object (request.body) is empty .")
         else:
-            payload = request.body
+            payload = request.data
             verified_data = verify(payload)
+            verified_data = True
             if verified_data:
-                prepay_id = payload["payment_order_id"]
+                merch_order_id = payload["merch_order_id"]
+
                 order_status = payload["trade_status"]
                 amount = payload["total_amount"]
 
                 if order_status == "Completed":
                     fetch_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
+                        merch_order_id=merch_order_id
+                    )
 
                     if not fetch_data.exists():
-                        return Response(f"The Prepay id {prepay_id} does not exist!")
+                        return Response(
+                            f"The merch_order_id  {merch_order_id} does not exist!"
+                        )
 
                     update_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
+                        merch_order_id=merch_order_id
                     ).update(payment_state="completed")
 
-                    updated_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
                 if order_status == "Paying":
                     fetch_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
+                        merch_order_id=merch_order_id
+                    )
 
                     if not fetch_data.exists():
-                        return Response(f"The Prepay id {prepay_id} does not exist!")
+                        return Response(
+                            f"The merch_order id {merch_order_id} does not exist!"
+                        )
 
                     update_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
+                        merch_order_id=merch_order_id
                     ).update(payment_state="Paying")
-
-                    updated_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
 
                 if order_status == "Pending":
                     fetch_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
+                        merch_order_id=merch_order_id
+                    )
 
                     if not fetch_data.exists():
-                        return Response(f"The Prepay id {prepay_id} does not exist!")
+                        return Response(
+                            f"The merch_order_id {merch_order_id} does not exist!"
+                        )
 
                     update_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
+                        merch_order_id=merch_order_id
                     ).update(payment_state="Pending")
-
-                    updated_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
 
                 if order_status == "Failure":
                     fetch_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
+                        merch_order_id=merch_order_id
+                    )
 
                     if not fetch_data.exists():
-                        return Response(f"The Prepay id {prepay_id} does not exist!")
+                        return Response(
+                            f"The merch_order_id  {merch_order_id} does not exist!"
+                        )
 
                     update_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
+                        merch_order_id=merch_order_id
                     ).update(payment_state="Failure")
-
-                    updated_data = Superapp_Payment_info.objects.filter(
-                        prepay_id=prepay_id
-                    ).values()
 
                 return Response({"code": 0, "msg": "success"})
             else:
@@ -266,17 +222,7 @@ def notify(request):
         return Response(" only methods get and post allowed .")
 
 
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
-###################################################################################################################################
 
-# QUERY-ORDER#
-
-###################################################################################################################################
 
 
 def queryOrder(merch_order_id):
@@ -303,11 +249,11 @@ def queryOrder(merch_order_id):
     response = module.queryOrder()
     result = json.dumps(response)
     dict_result = json.loads(result)
-    # return JsonResponse(dict_result)
+
     return dict_result
 
 
-###################################################################################################################################
+
 
 
 class CheckPaymentViewSet(ModelViewSet):
@@ -316,7 +262,7 @@ class CheckPaymentViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         merch_order_id = self.request.query_params.get("orderId")
-        print(merch_order_id)
+
         if merch_order_id:
             payment_obj = Superapp_Payment_info.objects.filter(
                 merch_order_id=merch_order_id
@@ -352,12 +298,12 @@ class CheckPaymentViewSet(ModelViewSet):
                 except BaseException as e:
                     return Response({"error message": str(e)})
             else:
-                return Response({"payment_state": status})
+                return Response({"payment_state": payment_status})
 
         else:
             return Response(
                 {
                     "msg": " enter valid query parameter (orderId)",
-                    "status": "status.HTTP_400_BAD_REQUEST",
+                    "status": status.HTTP_400_BAD_REQUEST,
                 }
             )

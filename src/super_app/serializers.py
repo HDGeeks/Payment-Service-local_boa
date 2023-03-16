@@ -1,6 +1,5 @@
 from .models import Superapp_Payment_info
 from rest_framework.serializers import ModelSerializer
-from dateutil.relativedelta import *
 
 
 class Superapp_payment_serializer(ModelSerializer):

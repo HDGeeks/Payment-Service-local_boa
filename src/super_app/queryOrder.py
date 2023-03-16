@@ -1,8 +1,6 @@
-import requests
-from . import applyFabricToken
 import json
-from . import tools
-from . import tools
+import requests
+from . import applyFabricToken, tools
 
 
 class QueryOrderService:
@@ -22,8 +20,8 @@ class QueryOrderService:
         self.appSecret = appSecret
         self.merchantAppId = merchantAppId
         self.merchantCode = merchantCode
-        # self.notify_path = "https://superapp.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/subscription/super-app-notify-url"
 
+    def queryOrder(self):
         merch_order_id = self.req["merch_order_id"]
         applyFabricTokenResult = applyFabricToken.ApplyFabricTokenService(
             self.BASE_URL, self.fabricAppId, self.appSecret, self.merchantAppId
@@ -32,8 +30,6 @@ class QueryOrderService:
         fabricToken = result["token"]
         queryOrderResult = self.requestQueryOrder(fabricToken, merch_order_id)
 
-        # rawRequest = self.createRawRequest(prepayId)
-        # print(rawRequest)
         return queryOrderResult
 
     def requestQueryOrder(self, fabricToken, title):
@@ -70,5 +66,4 @@ class QueryOrderService:
         req["sign"] = sign
         req["sign_type"] = "SHA256withRSA"
 
-        # print(json.dumps(req))
         return json.dumps(req)

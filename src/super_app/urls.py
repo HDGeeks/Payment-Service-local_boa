@@ -1,7 +1,6 @@
-from django.urls import path, re_path
+from django.urls import path
 from rest_framework import routers
-from .views import SuperappPayViewSet, CheckPaymentViewSet, notify
-
+from .views import CheckPaymentViewSet, SuperappPayViewSet, notify
 
 router = routers.DefaultRouter(trailing_slash=False)
 
@@ -16,4 +15,3 @@ router.register(
 urlpatterns = [path("super-app-notify-url", notify, name="super-app-notify-url")]
 
 urlpatterns += router.urls
-#
