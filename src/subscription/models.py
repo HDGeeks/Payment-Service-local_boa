@@ -1,5 +1,6 @@
 from dateutil.relativedelta import *
 from django.db import models
+from django.forms import ValidationError
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -58,6 +59,13 @@ class Subscription(Abstarct):
     sub_type = models.CharField(
         max_length=50, choices=SUBSCRIPTION_TYPE, default="MONTHLY"
     )
+    def clean(self):
+        if self.payment_id is not None and self.payment_id_from_superapp is not None:
+            raise ValidationError('Both foreign keys cannot have value.')
+        elif self.payment_id is None and self.payment_id_from_superapp is None:
+            raise ValidationError('At least one foreign key must have a value.')
+
+
 
     def __str__(self):
         return self.user_id

@@ -19,6 +19,8 @@ from utilities.telebirrApi import Telebirr
 from utilities.send_to_telebirr import send_to_telebirr
 from utilities.generate_nonce import generate_nonce
 
+from super_app.models import Superapp_Payment_info
+
 from .models import Subscription, Subscription_Payment_info, SubscriptionFee
 from .serializers import (
     Subscription_fee_serializer,
@@ -136,37 +138,51 @@ class SubscriptionViewset(ModelViewSet):
     def list(self, request, *args, **kwargs):
         user = self.request.query_params.get("user")
         if user is not None:
-            queryset = Subscription.objects.filter(user_id=user)
-            return Response(queryset)
+            queryset = Subscription.objects.filter(user_id=user).values()
+            return Response(queryset,status=status.HTTP_200_OK)
 
         else:
             return Response(Subscription.objects.all().values())
 
     def create(self, request, *args, **kwargs):
-        query_params = request.GET
-        q = query_params.get("payment_method")
-        if q == "superApp":
-            verify_payment_id = Superapp_Payment_info.objects.filter(
-                payment_id=request.data["payment_id"]
-            ).values("payment_id")
+        payment_id=request.data["payment_id"]
+        payment_id_from_superapp=request.data["payment_id_from_superapp"]
+        
+        if payment_id and payment_id_from_superapp:
+            return Response("Only one type of payment is supported . Multiple payment provided .",status=status.HTTP_400_BAD_REQUEST)
+        elif payment_id is None and payment_id_from_superapp is None:
+            return Response("Provide one payment Id please .",status=status.HTTP_400_BAD_REQUEST)
+        
+        if payment_id_from_superapp:
+            # check if the payment id already exists in subscription
+            verify_payment_id = Subscription.objects.filter(
+                payment_id_from_superapp=request.data["payment_id_from_superapp"]
+            ).values("payment_id_from_superapp")
+            
+            # Verify payment state is complete
             verify_payment_state = Superapp_Payment_info.objects.filter(
-                id=request.data["payment_id"]
+                id=request.data["payment_id_from_superapp"]
             ).values("payment_state")[0]["payment_state"]
+
+            # Check if the current requesting user made the payment
             verify_userId = Superapp_Payment_info.objects.filter(
-                id=request.data["payment_id"]
+                id=request.data["payment_id_from_superapp"]
             ).values("userId")[0]["userId"]
+            
+            # Verify if the payment was made for subscription
             verify_payment_title = Superapp_Payment_info.objects.filter(
-                id=request.data["payment_id"]
+                id=request.data["payment_id_from_superapp"]
             ).values("payment_title")[0]["payment_title"]
+
             if verify_payment_id:
                 return Response(
                     {
-                        "message": f"This payment id {verify_payment_id} is already used for other subscription."
+                        "message": f"This payment id {verify_payment_id} is already used for existing subscription."
                     }
                 )
             if verify_userId != request.data["user_id"]:
                 return Response(
-                    {"message": "This subscription is not purchased by this user ."}
+                    {"message": "This payment provided was not made by this user ."}
                 )
             elif verify_payment_state.upper() != "COMPLETED":
                 return Response(
@@ -181,34 +197,31 @@ class SubscriptionViewset(ModelViewSet):
                     }
                 )
 
-            elif request.data["sub_type"] == "MONTHLY":
+            if request.data["sub_type"] == "MONTHLY":
                 date = datetime.now()
                 new_paid_until_monthly = date + relativedelta(months=+1)
-                # new_paid_until = date + timedelta(months=+1)
-                # request.data._mutable = True
-                # request.data['paid_until']=new_paid_until
-                # request.data._mutable = False
+               
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],
                     "payment_id": request.data["payment_id"],
+                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
                     "sub_type": "MONTHLY",
                     "paid_until": new_paid_until_monthly,
                     "is_Subscriebed": True,
                 }
-            elif request.data["sub_type"] == "YEARLY":
+            else:
+                #request.data["sub_type"] == "YEARLY"
                 date = datetime.now()
                 new_paid_until_yearly = date + relativedelta(months=+12)
 
-                # # remember old state
-                # request.data._mutable = True
-                # request.data['paid_until']=new_paid_until
-                # request.data._mutable = False
+              
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],
-                    "payment_id": request.data["payment_id"],
-                    "sub_type": "MONTHLY",
+                    "payment_id":request.data["payment_id"],
+                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
+                    "sub_type": "YEARLY",
                     "paid_until": new_paid_until_yearly,
                     "is_Subscriebed": True,
                 }
@@ -219,15 +232,21 @@ class SubscriptionViewset(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         else:
+            # check if the payment id is already used for subscription ,
             verify_payment_id = Subscription.objects.filter(
                 payment_id=request.data["payment_id"]
-            ).values("payment_id")
+            ).values("payment_id")[0]["payment_id"]
+
+            # make sure payment state is complete in the payment table
             verify_payment_state = Subscription_Payment_info.objects.filter(
                 id=request.data["payment_id"]
             ).values("payment_state")[0]["payment_state"]
+
+            # make sure the payment was done by the subscribing user
             verify_userId = Subscription_Payment_info.objects.filter(
                 id=request.data["payment_id"]
             ).values("userId")[0]["userId"]
+
             if verify_payment_id:
                 return Response(
                     {
@@ -236,7 +255,7 @@ class SubscriptionViewset(ModelViewSet):
                 )
             if verify_userId != request.data["user_id"]:
                 return Response(
-                    {"message": "This subscription is not purchased by this user ."}
+                    {"message": "The user {verify_userId} made the payment , not the current user ."}
                 )
             elif verify_payment_state.upper() != "COMPLETED":
                 return Response(
@@ -245,7 +264,7 @@ class SubscriptionViewset(ModelViewSet):
                     }
                 )
 
-            elif request.data["sub_type"] == "MONTHLY":
+            if request.data["sub_type"] == "MONTHLY":
                 date = datetime.now()
                 new_paid_until_monthly = date + relativedelta(months=+1)
 
@@ -253,22 +272,22 @@ class SubscriptionViewset(ModelViewSet):
                 pay_load = {
                     "user_id": request.data["user_id"],
                     "payment_id": request.data["payment_id"],
+                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
                     "sub_type": "MONTHLY",
                     "paid_until": new_paid_until_monthly,
                     "is_Subscriebed": True,
                 }
-            elif request.data["sub_type"] == "YEARLY":
+            else:
+                #request.data["sub_type"] == "YEARLY"
                 date = datetime.now()
                 new_paid_until_yearly = date + relativedelta(months=+12)
 
-                # # remember old state
-                # request.data._mutable = True
-                # request.data['paid_until']=new_paid_until
-                # request.data._mutable = False
+               
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],
                     "payment_id": request.data["payment_id"],
+                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
                     "sub_type": "YEARLY",
                     "paid_until": new_paid_until_yearly,
                     "is_Subscriebed": True,
