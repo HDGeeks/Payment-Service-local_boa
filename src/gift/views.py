@@ -8,6 +8,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.pagination import PageNumberPagination
+from gift.pagination import MyPagination
 
 from utilities.generate_nonce import generate_nonce
 from utilities.identity import get_identity
@@ -164,6 +166,8 @@ class GiftAnalyticViewset(ModelViewSet):
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
     http_method_names = ["get", "head"]
+    pagination_class = MyPagination
+    
 
     def list(self, request, *args, **kwargs):
         response = {}
@@ -182,6 +186,7 @@ class GiftAnalyticViewset(ModelViewSet):
         for user in unique_user_ids:
             # get data from haile
             user_identity = get_identity(user)
+            print(type(user_identity))
             # Per user
             per_user = (
                 Gift_Payment_info.objects.filter(userId=user)
@@ -190,11 +195,17 @@ class GiftAnalyticViewset(ModelViewSet):
             )
             # total per user
             total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
+            print(total_per_user)
             # final result dictionary
             final_result_dictionary = {}
-            final_result_dictionary["user_identity"] = user_identity
+            for key, value in user_identity.items():
+                final_result_dictionary[key]=value
+
+            #final_result_dictionary["user_identity"] = user_identity
             final_result_dictionary["per_user"] = per_user
-            final_result_dictionary["total_per_user"] = total_per_user
+            # new change
+            for key,value in total_per_user.items():
+                final_result_dictionary[key]= value
             # append results to result
             response["result"].append(final_result_dictionary)
         return Response(response)
@@ -344,3 +355,4 @@ class GiveGiftArtistViewset(ModelViewSet):
 #     )
 
 #     return telebirr.send_request()
+
