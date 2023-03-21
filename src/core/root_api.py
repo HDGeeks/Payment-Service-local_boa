@@ -81,5 +81,6 @@ def api_root(request, format=None):
             "superAppcheck-superapp-payment": reverse(
                 "check-superapp-payment-list", request=request, format=format
             ),
+            "superapp_notify-url": reverse("super-app-notify-url", request=request, format=format)
         }
     )
