@@ -1,7 +1,7 @@
 import json
 
 import environ
-from django.db.models import Sum
+from django.db.models import Sum,Count
 from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import status
@@ -181,12 +181,15 @@ class GiftAnalyticViewset(ModelViewSet):
 
         unique_user_ids = list(set(list_of_users))
 
-        response["count"] = unique_user_ids.__len__()
+        #response["count"] = unique_user_ids.__len__()
+        response["count"] = Gift_Payment_info.objects.values('userId').distinct().count()
+        print(response["count"])
+        
         response["result"] = []
         for user in unique_user_ids:
             # get data from haile
             user_identity = get_identity(user)
-            print(type(user_identity))
+            
             # Per user
             per_user = (
                 Gift_Payment_info.objects.filter(userId=user)
@@ -195,7 +198,7 @@ class GiftAnalyticViewset(ModelViewSet):
             )
             # total per user
             total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
-            print(total_per_user)
+           
             # final result dictionary
             final_result_dictionary = {}
             for key, value in user_identity.items():
@@ -208,6 +211,9 @@ class GiftAnalyticViewset(ModelViewSet):
                 final_result_dictionary[key]= value
             # append results to result
             response["result"].append(final_result_dictionary)
+           
+           
+            
         return Response(response)
 
 
