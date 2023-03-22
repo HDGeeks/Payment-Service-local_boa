@@ -183,7 +183,7 @@ class GiftAnalyticViewset(ModelViewSet):
 
         #response["count"] = unique_user_ids.__len__()
         response["count"] = Gift_Payment_info.objects.values('userId').distinct().count()
-        print(response["count"])
+      
         
         response["result"] = []
         for user in unique_user_ids:

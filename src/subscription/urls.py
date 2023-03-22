@@ -1,4 +1,5 @@
 from .views import (
+    SubscribersAnalytics,
     SubscriptionViewset,
     PaymentViewset,
     notify,
@@ -17,7 +18,11 @@ router.register(
     r"subscription-fee", SubscriptionFeeViewset, basename="subscription-fee"
 )
 router.register(r"pay_to_subscribe", PaymentViewset, basename="pay_to_subscribe")
-router.register(r"subs-analytics", SubsAnalyticViewset, basename="subs-analytics")
+
+router.register(r"subs-payment-analytics", SubsAnalyticViewset,
+                basename="subs-payment-analytics")
+router.register(r"subscription-analytics", SubscribersAnalytics,
+                basename="subscription-analytics")
 router.register(
     r"subscribe_with_telebirr",
     SubscribeWithTelebirrViewSet,
