@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from gift.pagination import MyPagination
 
 from super_app.models import *
 
@@ -344,6 +345,7 @@ class SubsAnalyticViewset(ModelViewSet):
     queryset = Subscription_Payment_info.objects.all()
     serializer_class = Subscription_payment_serializer
     http_method_names = ["get", "head"]
+    pagination_class=MyPagination
 
     def list(self, request, *args, **kwargs):
         response = {}
@@ -357,8 +359,10 @@ class SubsAnalyticViewset(ModelViewSet):
 
         unique_user_ids = list(set(list_of_users))
 
-        response["count"] = unique_user_ids.__len__()
+        response["count"] = Subscription.objects.values(
+            'userId').distinct().count()
         response["result"] = []
+
         for user in unique_user_ids:
             # get data from haile
             user_identity = get_identity(user)
@@ -370,9 +374,14 @@ class SubsAnalyticViewset(ModelViewSet):
             total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
             # final result dictionary
             final_result_dictionary = {}
-            final_result_dictionary["user_identity"] = user_identity
+            for key, value in user_identity.items():
+                final_result_dictionary[key] = value
+
             final_result_dictionary["per_user"] = per_user
-            final_result_dictionary["total_per_user"] = total_per_user
+            for key, value in total_per_user.items():
+                final_result_dictionary[key] = value
+
+
             # append results to result
             response["result"].append(final_result_dictionary)
         return Response(response)
