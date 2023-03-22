@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from super_app.models import *
+from utilities.pagination import MyPagination
 
 from utilities.generate_nonce import generate_nonce
 from utilities.identity import get_identity
@@ -98,12 +99,14 @@ class SavePurchasePaymentViewSet(ModelViewSet):
 
 
 class PurchaseAnalyticViewset(ModelViewSet):
+
     queryset = Payment_info.objects.all()
     serializer_class = Payment_info_serializer
-
     http_method_names = ["get", "head"]
+    pagination_class = MyPagination
 
     def list(self, request, *args, **kwargs):
+        # The response object
         response = {}
         data = json.loads(
             json.dumps(super().list(request, *args, **kwargs).data["results"])
@@ -115,24 +118,39 @@ class PurchaseAnalyticViewset(ModelViewSet):
 
         unique_user_ids = list(set(list_of_users))
 
-        response["count"] = unique_user_ids.__len__()
+        #response["count"] = unique_user_ids.__len__()
+        response["count"] = Payment_info.objects.values(
+            'userId').distinct().count()
+      
+
         response["result"] = []
         for user in unique_user_ids:
             # get data from haile
             user_identity = get_identity(user)
+
             # Per user
-            per_user = Payment_info.objects.filter(userId=user).values(
-                "userId", "payment_amount"
+            per_user = (
+                Payment_info.objects.filter(userId=user)
+                .order_by("created_at")
+                .values("userId", "payment_amount", "payment_method", "created_at")
             )
             # total per user
-            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
+            total_per_user = per_user.aggregate(
+                total_per_user=Sum("payment_amount"))
+
             # final result dictionary
             final_result_dictionary = {}
-            final_result_dictionary["user_identity"] = user_identity
+            for key, value in user_identity.items():
+                final_result_dictionary[key] = value
+
+            #final_result_dictionary["user_identity"] = user_identity
             final_result_dictionary["per_user"] = per_user
-            final_result_dictionary["total_per_user"] = total_per_user
+            # new change
+            for key, value in total_per_user.items():
+                final_result_dictionary[key] = value
             # append results to result
             response["result"].append(final_result_dictionary)
+
         return Response(response)
 
 
@@ -292,7 +310,7 @@ class PurchasedTracksViewset(ModelViewSet):
     def list(self, request, *args, **kwargs):
         user_id = self.request.query_params.get("user")
         if user_id:
-            if user_id == "all_users":
+            if user_id == "all":
                 return Response(
                     Purcahsed_track.objects.values("userId").annotate(
                         total_amount_per_user=Sum("track_price_amount")
@@ -399,3 +417,64 @@ class PurchasedTracksViewset(ModelViewSet):
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class PurchsedTrackAnalytics(ModelViewSet):
+
+    serializer_class = Purcahsed_track_serializer
+    queryset = Purcahsed_track.objects.all()
+    http_method_names = ["get", "head"]
+    pagination_class = MyPagination
+
+    def list(self, request, *args, **kwargs):
+        # The response object
+        response = {}
+        data = json.loads(
+            json.dumps(super().list(request, *args, **kwargs).data["results"])
+        )
+        # list of user_ids
+        list_of_users = []
+        for item in data:
+            list_of_users.append(item["userId"])
+
+        unique_user_ids = list(set(list_of_users))
+
+        #response["count"] = unique_user_ids.__len__()
+        response["count"] = Purcahsed_track.objects.values(
+            'userId').distinct().count()
+
+        response["result"] = []
+        for user in unique_user_ids:
+            # get data from haile
+            user_identity = get_identity(user)
+
+            # Per user
+            per_user = (
+                Purcahsed_track.objects.filter(userId=user)
+                .order_by("created_at")
+                .values("id", "userId", "trackId", "track_price_amount", "created_at")
+            )
+            per_user = Purcahsed_track.objects.filter(userId=user).values(
+                "userId", "trackId", "track_price_amount", "created_at"
+            )
+            # total per user
+            total_per_user = per_user.aggregate(
+                total_per_user=Sum("track_price_amount")
+            )
+
+            # final result dictionary
+            final_result_dictionary = {}
+            for key, value in user_identity.items():
+                final_result_dictionary[key] = value
+
+            #final_result_dictionary["user_identity"] = user_identity
+            final_result_dictionary["per_user"] = per_user
+            # new change
+            for key, value in total_per_user.items():
+                final_result_dictionary[key] = value
+            # append results to result
+            response["result"].append(final_result_dictionary)
+
+        return Response(response)
+
+
+

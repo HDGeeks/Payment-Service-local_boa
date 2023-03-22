@@ -26,6 +26,9 @@ def api_root(request, format=None):
             "purchase-analytics": reverse(
                 "purchase-analytics-list", request=request, format=format
             ),
+            "purchased-tracks-analytics": reverse(
+                "purchased-tracks-analytics-list", request=request, format=format
+            ),
             "payment-notify-url": reverse(
                 "payment-notify-url", request=request, format=format
             ),

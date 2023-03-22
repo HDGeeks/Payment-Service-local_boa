@@ -4,6 +4,7 @@ from .views import (
     PurchaseWithTelebirrViewSet,
     PurchasedTracksViewset,
     PurchasedAlbumsViewset,
+    PurchsedTrackAnalytics,
     SavePurchasePaymentViewSet,
     TrackRevenueViewset,
     PurchaseAnalyticViewset,
@@ -28,6 +29,9 @@ router.register(
 )
 router.register(
     r"purchase-analytics", PurchaseAnalyticViewset, basename="purchase-analytics"
+)
+router.register(
+    r"purchased-tracks-analytics", PurchsedTrackAnalytics, basename="purchased-tracks-analytics"
 )
 router.register(
     r"set-track-revenue-rate", TrackRevenueViewset, basename="set-track-revenue-rate"

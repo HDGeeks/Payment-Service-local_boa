@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import PageNumberPagination
-from gift.pagination import MyPagination
+from utilities.pagination import MyPagination
 
 from utilities.generate_nonce import generate_nonce
 from utilities.identity import get_identity
