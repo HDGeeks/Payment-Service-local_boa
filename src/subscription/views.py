@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from gift.pagination import MyPagination
 
 from super_app.models import *
 
@@ -344,6 +345,7 @@ class SubsAnalyticViewset(ModelViewSet):
     queryset = Subscription_Payment_info.objects.all()
     serializer_class = Subscription_payment_serializer
     http_method_names = ["get", "head"]
+    pagination_class=MyPagination
 
     def list(self, request, *args, **kwargs):
         response = {}
@@ -354,25 +356,34 @@ class SubsAnalyticViewset(ModelViewSet):
         list_of_users = []
         for item in data:
             list_of_users.append(item["userId"])
+        
 
         unique_user_ids = list(set(list_of_users))
 
-        response["count"] = unique_user_ids.__len__()
+        response["count"] = Subscription_Payment_info.objects.values(
+            'userId').distinct().count()
+        
         response["result"] = []
+
         for user in unique_user_ids:
             # get data from haile
             user_identity = get_identity(user)
             # Per user
-            per_user = Subscription_Payment_info.objects.filter(userId=user).values(
-                "userId", "payment_amount"
+            per_user = Subscription_Payment_info.objects.filter(userId=user).order_by("created_at").values(
+                "userId", "payment_amount", "payment_method", "created_at"
             )
             # total per user
             total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
             # final result dictionary
             final_result_dictionary = {}
-            final_result_dictionary["user_identity"] = user_identity
+            for key, value in user_identity.items():
+                final_result_dictionary[key] = value
+
             final_result_dictionary["per_user"] = per_user
-            final_result_dictionary["total_per_user"] = total_per_user
+            for key, value in total_per_user.items():
+                final_result_dictionary[key] = value
+
+
             # append results to result
             response["result"].append(final_result_dictionary)
         return Response(response)
@@ -426,3 +437,58 @@ class SubscribeWithTelebirrViewSet(ModelViewSet):
                     "status": "status.HTTP_400_BAD_REQUEST",
                 }
             )
+
+
+class SubscribersAnalytics(ModelViewSet):
+
+    serializer_class = subscriptionSerializer
+    queryset = Subscription.objects.all()
+    http_method_names = ["get", "head"]
+    pagination_class = MyPagination
+
+    def list(self, request, *args, **kwargs):
+        # The response object
+        response = {}
+        data = json.loads(
+            json.dumps(super().list(request, *args, **kwargs).data["results"])
+        )
+        # list of user_ids
+        list_of_users = []
+        for item in data:
+            list_of_users.append(item["user_id"])
+
+        unique_user_ids = list(set(list_of_users))
+
+        #response["count"] = unique_user_ids.__len__()
+        response["count"] = Subscription.objects.values(
+            "user_id",).distinct().count()
+
+        response["result"] = []
+        for user in unique_user_ids:
+            # get data from haile
+            user_identity = get_identity(user)
+
+            # Per user
+            per_user = (
+                Subscription.objects.filter(user_id=user)
+                .order_by("created_at")
+                .values("id", "user_id", "sub_type", "subscription_date", "created_at")
+            )
+
+            # total per user
+            total_per_user = Subscription.objects.values(
+                "user_id").count()
+
+            # final result dictionary
+            final_result_dictionary = {}
+            # include user idntity in the dict
+            for key, value in user_identity.items():
+                final_result_dictionary[key] = value
+            # include per user in to dict
+            final_result_dictionary["per_user"] = per_user
+            # include total per user in to dict
+            final_result_dictionary["total_per_user"] = total_per_user
+            # append results to result
+            response["result"].append(final_result_dictionary)
+
+        return Response(response)
