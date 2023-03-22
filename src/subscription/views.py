@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from gift.pagination import MyPagination
+from utilities.pagination import MyPagination
 
 from super_app.models import *
 
@@ -148,7 +148,8 @@ class SubscriptionViewset(ModelViewSet):
     def create(self, request, *args, **kwargs):
         payment_id=request.data["payment_id"]
         payment_id_from_superapp=request.data["payment_id_from_superapp"]
-        
+        print('======================================',payment_id)
+        print('========================================',payment_id_from_superapp)
         if payment_id and payment_id_from_superapp:
             return Response("Only one type of payment is supported . Multiple payment provided .",status=status.HTTP_400_BAD_REQUEST)
         elif payment_id is None and payment_id_from_superapp is None:
@@ -236,8 +237,8 @@ class SubscriptionViewset(ModelViewSet):
             # check if the payment id is already used for subscription ,
             verify_payment_id = Subscription.objects.filter(
                 payment_id=request.data["payment_id"]
-            ).values("payment_id")[0]["payment_id"]
-
+            ).values("payment_id")
+            print('========================================.',verify_payment_id)
             # make sure payment state is complete in the payment table
             verify_payment_state = Subscription_Payment_info.objects.filter(
                 id=request.data["payment_id"]
@@ -440,9 +441,9 @@ class SubscribeWithTelebirrViewSet(ModelViewSet):
 
 
 class SubscribersAnalytics(ModelViewSet):
-
-    serializer_class = subscriptionSerializer
     queryset = Subscription.objects.all()
+    serializer_class = subscriptionSerializer
+    
     http_method_names = ["get", "head"]
     pagination_class = MyPagination
 
@@ -454,14 +455,16 @@ class SubscribersAnalytics(ModelViewSet):
         )
         # list of user_ids
         list_of_users = []
+        print(data)
         for item in data:
             list_of_users.append(item["user_id"])
+        print(list_of_users)
 
         unique_user_ids = list(set(list_of_users))
-
+        print('===================================>',unique_user_ids)
         #response["count"] = unique_user_ids.__len__()
         response["count"] = Subscription.objects.values(
-            "user_id",).distinct().count()
+            "user_id").distinct().count()
 
         response["result"] = []
         for user in unique_user_ids:
@@ -476,8 +479,7 @@ class SubscribersAnalytics(ModelViewSet):
             )
 
             # total per user
-            total_per_user = Subscription.objects.values(
-                "user_id").count()
+            total_per_user =per_user.count()
 
             # final result dictionary
             final_result_dictionary = {}
