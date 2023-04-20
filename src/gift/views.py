@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import filters
 from utilities.pagination import MyPagination
 
 from utilities.generate_nonce import generate_nonce
@@ -162,59 +163,62 @@ class BuyGiftViewSet(ModelViewSet):
         return Response(Gift_Payment_info.objects.all().order_by("userId").values())
 
 
-class GiftAnalyticViewset(ModelViewSet):
-    queryset = Gift_Payment_info.objects.all()
-    serializer_class = Gift_payment_serializer
-    http_method_names = ["get", "head"]
-    pagination_class = MyPagination
+# class GiftAnalyticViewset(ModelViewSet):
+#     queryset = Gift_Payment_info.objects.all()
+#     serializer_class = Gift_payment_serializer
+#     http_method_names = ["get", "head"]
+#     pagination_class = MyPagination
     
 
-    def list(self, request, *args, **kwargs):
-        response = {}
-        data = json.loads(
-            json.dumps(super().list(request, *args, **kwargs).data["results"])
-        )
-        # list of user_ids
-        list_of_users = []
-        for item in data:
-            list_of_users.append(item["userId"])
+#     def list(self, request, *args, **kwargs):
+#         response = {}
+#         data = json.loads(
+#             json.dumps(super().list(request, *args, **kwargs).data["results"])
+#         )
+#         # list of user_ids
+#         list_of_users = []
+#         for item in data:
+#             list_of_users.append(item["userId"])
 
-        unique_user_ids = list(set(list_of_users))
-
-        #response["count"] = unique_user_ids.__len__()
-        response["count"] = Gift_Payment_info.objects.values('userId').distinct().count()
+#         unique_user_ids = list(set(list_of_users))
+#         print(list_of_users)
+#         print(unique_user_ids)
+#         #response["count"] = unique_user_ids.__len__()
+#         response["count"] = Gift_Payment_info.objects.values('userId').distinct().count()
+#         test= Gift_Payment_info.objects.values('userId').distinct()
+#         print('===========>',test)
       
         
-        response["result"] = []
-        for user in unique_user_ids:
-            # get data from haile
-            user_identity = get_identity(user)
+#         response["result"] = []
+#         for user in unique_user_ids:
+#             # get data from haile
+#             user_identity = get_identity(user)
             
-            # Per user
-            per_user = (
-                Gift_Payment_info.objects.filter(userId=user)
-                .order_by("created_at")
-                .values("userId", "payment_amount", "payment_method", "created_at")
-            )
-            # total per user
-            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
+#             # Per user
+#             per_user = (
+#                 Gift_Payment_info.objects.filter(userId=user)
+#                 .order_by("created_at")
+#                 .values("userId", "payment_amount", "payment_method", "created_at")
+#             )
+#             # total per user
+#             total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
            
-            # final result dictionary
-            final_result_dictionary = {}
-            for key, value in user_identity.items():
-                final_result_dictionary[key]=value
+#             # final result dictionary
+#             final_result_dictionary = {}
+#             for key, value in user_identity.items():
+#                 final_result_dictionary[key]=value
 
-            #final_result_dictionary["user_identity"] = user_identity
-            final_result_dictionary["per_user"] = per_user
-            # new change
-            for key,value in total_per_user.items():
-                final_result_dictionary[key]= value
-            # append results to result
-            response["result"].append(final_result_dictionary)
+#             #final_result_dictionary["user_identity"] = user_identity
+#             final_result_dictionary["per_user"] = per_user
+#             # new change
+#             for key,value in total_per_user.items():
+#                 final_result_dictionary[key]= value
+#             # append results to result
+#             response["result"].append(final_result_dictionary)
            
            
             
-        return Response(response)
+#         return Response(response)
 
 
 class CoinViewset(ModelViewSet):
@@ -362,3 +366,40 @@ class GiveGiftArtistViewset(ModelViewSet):
 
 #     return telebirr.send_request()
 
+
+
+
+class GiftAnalyticViewset(ModelViewSet):
+    queryset = Gift_Payment_info.objects.all()
+    serializer_class = Gift_payment_serializer
+    http_method_names = ["get", "head"]
+    pagination_class = MyPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ["created_at", "payment_amount"]
+    search_fields = ["userId"]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        unique_user_ids_count = queryset.values("userId").distinct().count()
+        unique_user_ids = queryset.values("userId").distinct()
+        print('================================>',unique_user_ids)
+        paginated_queryset = self.paginate_queryset(queryset)
+
+        response = {
+            "count": unique_user_ids_count,
+            "result": [],
+        }
+
+        for item in unique_user_ids:
+            user_identity = get_identity(item['userId'])
+            per_user = Gift_Payment_info.objects.filter(userId=item['userId']).order_by("created_at").values("userId", "payment_amount", "payment_method", "created_at")
+            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
+            final_result_dictionary = {}
+            for key, value in user_identity.items():
+                final_result_dictionary[key] = value
+            final_result_dictionary["per_user"] = per_user
+            for key, value in total_per_user.items():
+                final_result_dictionary[key] = value
+            response["result"].append(final_result_dictionary)
+
+        return self.get_paginated_response(response)
