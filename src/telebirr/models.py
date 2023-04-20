@@ -90,7 +90,10 @@ class Purcahsed_track(Abstarct):
             http.mount("http://", adapter)
 
             response = http.post(url, json=data, headers=headers)
-
+            print(response.status_code)
+            print(response.content)
+            print(response.headers)
+            print(response.history)
             return response
             # if response.status_code == 201:
             #     with open("success_track.txt", "a") as f:
