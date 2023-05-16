@@ -7,6 +7,7 @@ from urllib3.util.retry import Retry
 from django.core.mail import send_mail
 from super_app.models import Superapp_Payment_info
 
+
 class Abstarct(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -45,11 +46,19 @@ class Subscription_Payment_info(Abstarct):
 
 
 class Subscription(Abstarct):
-    SUBSCRIPTION_TYPE = (("MONTHLY", "monthly"), ("YEARLY", "yearly"))
+    SUBSCRIPTION_TYPE = (
+        ("DAILY", "daily"),
+        ("WEEKLY", "weekly"),
+        ("MONTHLY", "monthly"),
+        ("YEARLY", "yearly"),
+    )
     user_id = models.CharField(max_length=255, blank=False, null=True)
-    payment_id = models.ForeignKey(Subscription_Payment_info, on_delete=models.PROTECT,null=True)
+    payment_id = models.ForeignKey(
+        Subscription_Payment_info, on_delete=models.PROTECT, null=True
+    )
     payment_id_from_superapp = models.ForeignKey(
-        Superapp_Payment_info, on_delete=models.PROTECT ,null=True)
+        Superapp_Payment_info, on_delete=models.PROTECT, null=True
+    )
 
     subscription_date = models.DateTimeField(auto_now=True)
     paid_until = models.DateTimeField(null=False, blank=True)
@@ -59,13 +68,12 @@ class Subscription(Abstarct):
     sub_type = models.CharField(
         max_length=50, choices=SUBSCRIPTION_TYPE, default="MONTHLY"
     )
+
     def clean(self):
         if self.payment_id is not None and self.payment_id_from_superapp is not None:
-            raise ValidationError('Both foreign keys cannot have value.')
+            raise ValidationError("Both foreign keys cannot have value.")
         elif self.payment_id is None and self.payment_id_from_superapp is None:
-            raise ValidationError('At least one foreign key must have a value.')
-
-
+            raise ValidationError("At least one foreign key must have a value.")
 
     def __str__(self):
         return self.user_id

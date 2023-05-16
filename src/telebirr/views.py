@@ -17,11 +17,18 @@ from utilities.identity import get_identity
 from utilities.send_to_telebirr import send_to_telebirr
 from utilities.telebirrApi import Telebirr
 
-from .models import (Payment_info, Purcahsed_album, Purcahsed_track,
-                     TrackRevenueRatePercentage)
-from .serializers import (Payment_info_serializer, Purcahsed_album_serializer,
-                          Purcahsed_track_serializer,
-                          Track_revenue_rate_serializer)
+from .models import (
+    Payment_info,
+    Purcahsed_album,
+    Purcahsed_track,
+    TrackRevenueRatePercentage,
+)
+from .serializers import (
+    Payment_info_serializer,
+    Purcahsed_album_serializer,
+    Purcahsed_track_serializer,
+    Track_revenue_rate_serializer,
+)
 
 
 # Initialise environment variables
@@ -38,8 +45,6 @@ environ.Env.read_env(DEBUG=(bool, False))
 @csrf_exempt
 def notify(request):
     if request.method == "POST":
-       
-
         decrypted_data = Telebirr.decrypt(
             public_key=env("Public_Key"), payload=request.body
         )
@@ -99,7 +104,6 @@ class SavePurchasePaymentViewSet(ModelViewSet):
 
 
 class PurchaseAnalyticViewset(ModelViewSet):
-
     queryset = Payment_info.objects.all()
     serializer_class = Payment_info_serializer
     http_method_names = ["get", "head"]
@@ -118,10 +122,8 @@ class PurchaseAnalyticViewset(ModelViewSet):
 
         unique_user_ids = list(set(list_of_users))
 
-        #response["count"] = unique_user_ids.__len__()
-        response["count"] = Payment_info.objects.values(
-            'userId').distinct().count()
-      
+        # response["count"] = unique_user_ids.__len__()
+        response["count"] = Payment_info.objects.values("userId").distinct().count()
 
         response["result"] = []
         for user in unique_user_ids:
@@ -135,15 +137,14 @@ class PurchaseAnalyticViewset(ModelViewSet):
                 .values("userId", "payment_amount", "payment_method", "created_at")
             )
             # total per user
-            total_per_user = per_user.aggregate(
-                total_per_user=Sum("payment_amount"))
+            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
 
             # final result dictionary
             final_result_dictionary = {}
             for key, value in user_identity.items():
                 final_result_dictionary[key] = value
 
-            #final_result_dictionary["user_identity"] = user_identity
+            # final_result_dictionary["user_identity"] = user_identity
             final_result_dictionary["per_user"] = per_user
             # new change
             for key, value in total_per_user.items():
@@ -418,8 +419,8 @@ class PurchasedTracksViewset(ModelViewSet):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class PurchsedTrackAnalytics(ModelViewSet):
 
+class PurchsedTrackAnalytics(ModelViewSet):
     serializer_class = Purcahsed_track_serializer
     queryset = Purcahsed_track.objects.all()
     http_method_names = ["get", "head"]
@@ -438,9 +439,8 @@ class PurchsedTrackAnalytics(ModelViewSet):
 
         unique_user_ids = list(set(list_of_users))
 
-        #response["count"] = unique_user_ids.__len__()
-        response["count"] = Purcahsed_track.objects.values(
-            'userId').distinct().count()
+        # response["count"] = unique_user_ids.__len__()
+        response["count"] = Purcahsed_track.objects.values("userId").distinct().count()
 
         response["result"] = []
         for user in unique_user_ids:
@@ -466,7 +466,7 @@ class PurchsedTrackAnalytics(ModelViewSet):
             for key, value in user_identity.items():
                 final_result_dictionary[key] = value
 
-            #final_result_dictionary["user_identity"] = user_identity
+            # final_result_dictionary["user_identity"] = user_identity
             final_result_dictionary["per_user"] = per_user
             # new change
             for key, value in total_per_user.items():
@@ -475,6 +475,3 @@ class PurchsedTrackAnalytics(ModelViewSet):
             response["result"].append(final_result_dictionary)
 
         return Response(response)
-
-
-

@@ -1,7 +1,7 @@
 import json
 
 import environ
-from django.db.models import Sum,Count
+from django.db.models import Sum, Count
 from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import status
@@ -167,7 +167,6 @@ class GiftAnalyticViewset(ModelViewSet):
     serializer_class = Gift_payment_serializer
     http_method_names = ["get", "head"]
     pagination_class = MyPagination
-    
 
     def list(self, request, *args, **kwargs):
         response = {}
@@ -181,15 +180,16 @@ class GiftAnalyticViewset(ModelViewSet):
 
         unique_user_ids = list(set(list_of_users))
 
-        #response["count"] = unique_user_ids.__len__()
-        response["count"] = Gift_Payment_info.objects.values('userId').distinct().count()
-      
-        
+        # response["count"] = unique_user_ids.__len__()
+        response["count"] = (
+            Gift_Payment_info.objects.values("userId").distinct().count()
+        )
+
         response["result"] = []
         for user in unique_user_ids:
             # get data from haile
             user_identity = get_identity(user)
-            
+
             # Per user
             per_user = (
                 Gift_Payment_info.objects.filter(userId=user)
@@ -198,22 +198,20 @@ class GiftAnalyticViewset(ModelViewSet):
             )
             # total per user
             total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
-           
+
             # final result dictionary
             final_result_dictionary = {}
             for key, value in user_identity.items():
-                final_result_dictionary[key]=value
+                final_result_dictionary[key] = value
 
-            #final_result_dictionary["user_identity"] = user_identity
+            # final_result_dictionary["user_identity"] = user_identity
             final_result_dictionary["per_user"] = per_user
             # new change
-            for key,value in total_per_user.items():
-                final_result_dictionary[key]= value
+            for key, value in total_per_user.items():
+                final_result_dictionary[key] = value
             # append results to result
             response["result"].append(final_result_dictionary)
-           
-           
-            
+
         return Response(response)
 
 
@@ -361,4 +359,3 @@ class GiveGiftArtistViewset(ModelViewSet):
 #     )
 
 #     return telebirr.send_request()
-

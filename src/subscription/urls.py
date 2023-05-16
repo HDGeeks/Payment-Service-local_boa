@@ -19,10 +19,12 @@ router.register(
 )
 router.register(r"pay_to_subscribe", PaymentViewset, basename="pay_to_subscribe")
 
-router.register(r"subs-payment-analytics", SubsAnalyticViewset,
-                basename="subs-payment-analytics")
-router.register(r"subscription-analytics", SubscribersAnalytics,
-                basename="subscription-analytics")
+router.register(
+    r"subs-payment-analytics", SubsAnalyticViewset, basename="subs-payment-analytics"
+)
+router.register(
+    r"subscription-analytics", SubscribersAnalytics, basename="subscription-analytics"
+)
 router.register(
     r"subscribe_with_telebirr",
     SubscribeWithTelebirrViewSet,

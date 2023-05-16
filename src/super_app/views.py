@@ -18,7 +18,7 @@ from .serializers import Superapp_payment_serializer
 from .verifyResponse import VerifyResponseService
 
 
-# CREAT-ORDER 
+# CREAT-ORDER
 
 
 env = environ.Env()
@@ -67,9 +67,6 @@ def creatOrder(amount, title, currency, merch_order_id):
     fianl_result["raw_result"] = rawRequest
 
     return fianl_result
-
-
-
 
 
 class SuperappPayViewSet(ModelViewSet):
@@ -126,15 +123,11 @@ class SuperappPayViewSet(ModelViewSet):
             )
 
 
-
-
 def verify(req):
     module = VerifyResponseService(req)
     response = module.verifyResponse()
 
     return response
-
-
 
 
 @api_view(
@@ -222,9 +215,6 @@ def notify(request):
         return Response(" only methods get and post allowed .")
 
 
-
-
-
 def queryOrder(merch_order_id):
     req = {
         "timestamp": "",
@@ -251,9 +241,6 @@ def queryOrder(merch_order_id):
     dict_result = json.loads(result)
 
     return dict_result
-
-
-
 
 
 class CheckPaymentViewSet(ModelViewSet):
@@ -305,6 +292,5 @@ class CheckPaymentViewSet(ModelViewSet):
                 {
                     "msg": " enter valid query parameter (orderId)",
                     "status": status.HTTP_400_BAD_REQUEST,
-                    
                 }
             )

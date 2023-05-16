@@ -21,6 +21,7 @@ from utilities.send_to_telebirr import send_to_telebirr
 from utilities.generate_nonce import generate_nonce
 
 from super_app.models import Superapp_Payment_info
+from utilities.validate import subs_data
 
 from .models import Subscription, Subscription_Payment_info, SubscriptionFee
 from .serializers import (
@@ -140,27 +141,32 @@ class SubscriptionViewset(ModelViewSet):
         user = self.request.query_params.get("user")
         if user is not None:
             queryset = Subscription.objects.filter(user_id=user).values()
-            return Response(queryset,status=status.HTTP_200_OK)
+            return Response(queryset, status=status.HTTP_200_OK)
 
         else:
             return Response(Subscription.objects.all().values())
 
     def create(self, request, *args, **kwargs):
-        payment_id=request.data["payment_id"]
-        payment_id_from_superapp=request.data["payment_id_from_superapp"]
-        print('======================================',payment_id)
-        print('========================================',payment_id_from_superapp)
+        payment_id = request.data["payment_id"]
+        payment_id_from_superapp = request.data["payment_id_from_superapp"]
+        print("======================================", payment_id)
+        print("========================================", payment_id_from_superapp)
         if payment_id and payment_id_from_superapp:
-            return Response("Only one type of payment is supported . Multiple payment provided .",status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                "Only one type of payment is supported . Multiple payment provided .",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         elif payment_id is None and payment_id_from_superapp is None:
-            return Response("Provide one payment Id please .",status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                "Provide one payment Id please .", status=status.HTTP_400_BAD_REQUEST
+            )
+
         if payment_id_from_superapp:
             # check if the payment id already exists in subscription
             verify_payment_id = Subscription.objects.filter(
                 payment_id_from_superapp=request.data["payment_id_from_superapp"]
             ).values("payment_id_from_superapp")
-            
+
             # Verify payment state is complete
             verify_payment_state = Superapp_Payment_info.objects.filter(
                 id=request.data["payment_id_from_superapp"]
@@ -170,7 +176,7 @@ class SubscriptionViewset(ModelViewSet):
             verify_userId = Superapp_Payment_info.objects.filter(
                 id=request.data["payment_id_from_superapp"]
             ).values("userId")[0]["userId"]
-            
+
             # Verify if the payment was made for subscription
             verify_payment_title = Superapp_Payment_info.objects.filter(
                 id=request.data["payment_id_from_superapp"]
@@ -199,36 +205,44 @@ class SubscriptionViewset(ModelViewSet):
                     }
                 )
 
+            try:
+                subs_data_saved = subs_data(request.data)
+            except Exception as e :
+                return Response(str(e))
+
             if request.data["sub_type"] == "MONTHLY":
                 date = datetime.now()
                 new_paid_until_monthly = date + relativedelta(months=+1)
-               
+
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],
                     "payment_id": request.data["payment_id"],
-                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
+                    "payment_id_from_superapp": request.data[
+                        "payment_id_from_superapp"
+                    ],
                     "sub_type": "MONTHLY",
                     "paid_until": new_paid_until_monthly,
                     "is_Subscriebed": True,
                 }
             else:
-                #request.data["sub_type"] == "YEARLY"
+                # request.data["sub_type"] == "YEARLY"
                 date = datetime.now()
                 new_paid_until_yearly = date + relativedelta(months=+12)
 
-              
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],
-                    "payment_id":request.data["payment_id"],
-                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
+                    "payment_id": request.data["payment_id"],
+                    "payment_id_from_superapp": request.data[
+                        "payment_id_from_superapp"
+                    ],
                     "sub_type": "YEARLY",
                     "paid_until": new_paid_until_yearly,
                     "is_Subscriebed": True,
                 }
 
-            serializer = subscriptionSerializer(data=pay_load)
+            serializer = subscriptionSerializer(data=subs_data_saved)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -238,7 +252,7 @@ class SubscriptionViewset(ModelViewSet):
             verify_payment_id = Subscription.objects.filter(
                 payment_id=request.data["payment_id"]
             ).values("payment_id")
-            print('========================================.',verify_payment_id)
+            print("========================================.", verify_payment_id)
             # make sure payment state is complete in the payment table
             verify_payment_state = Subscription_Payment_info.objects.filter(
                 id=request.data["payment_id"]
@@ -257,7 +271,9 @@ class SubscriptionViewset(ModelViewSet):
                 )
             if verify_userId != request.data["user_id"]:
                 return Response(
-                    {"message": "The user {verify_userId} made the payment , not the current user ."}
+                    {
+                        "message": "The user {verify_userId} made the payment , not the current user ."
+                    }
                 )
             elif verify_payment_state.upper() != "COMPLETED":
                 return Response(
@@ -266,6 +282,11 @@ class SubscriptionViewset(ModelViewSet):
                     }
                 )
 
+            try:
+                subs_data_saved_normal = subs_data(request.data)
+            except Exception as e :
+                return Response(str(e))
+            
             if request.data["sub_type"] == "MONTHLY":
                 date = datetime.now()
                 new_paid_until_monthly = date + relativedelta(months=+1)
@@ -274,28 +295,31 @@ class SubscriptionViewset(ModelViewSet):
                 pay_load = {
                     "user_id": request.data["user_id"],
                     "payment_id": request.data["payment_id"],
-                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
+                    "payment_id_from_superapp": request.data[
+                        "payment_id_from_superapp"
+                    ],
                     "sub_type": "MONTHLY",
                     "paid_until": new_paid_until_monthly,
                     "is_Subscriebed": True,
                 }
             else:
-                #request.data["sub_type"] == "YEARLY"
+                # request.data["sub_type"] == "YEARLY"
                 date = datetime.now()
                 new_paid_until_yearly = date + relativedelta(months=+12)
 
-               
                 pay_load = {}
                 pay_load = {
                     "user_id": request.data["user_id"],
                     "payment_id": request.data["payment_id"],
-                    "payment_id_from_superapp": request.data["payment_id_from_superapp"],
+                    "payment_id_from_superapp": request.data[
+                        "payment_id_from_superapp"
+                    ],
                     "sub_type": "YEARLY",
                     "paid_until": new_paid_until_yearly,
                     "is_Subscriebed": True,
                 }
 
-            serializer = subscriptionSerializer(data=pay_load)
+            serializer = subscriptionSerializer(data=subs_data_saved_normal)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -346,7 +370,7 @@ class SubsAnalyticViewset(ModelViewSet):
     queryset = Subscription_Payment_info.objects.all()
     serializer_class = Subscription_payment_serializer
     http_method_names = ["get", "head"]
-    pagination_class=MyPagination
+    pagination_class = MyPagination
 
     def list(self, request, *args, **kwargs):
         response = {}
@@ -357,21 +381,23 @@ class SubsAnalyticViewset(ModelViewSet):
         list_of_users = []
         for item in data:
             list_of_users.append(item["userId"])
-        
 
         unique_user_ids = list(set(list_of_users))
 
-        response["count"] = Subscription_Payment_info.objects.values(
-            'userId').distinct().count()
-        
+        response["count"] = (
+            Subscription_Payment_info.objects.values("userId").distinct().count()
+        )
+
         response["result"] = []
 
         for user in unique_user_ids:
             # get data from haile
             user_identity = get_identity(user)
             # Per user
-            per_user = Subscription_Payment_info.objects.filter(userId=user).order_by("created_at").values(
-                "userId", "payment_amount", "payment_method", "created_at"
+            per_user = (
+                Subscription_Payment_info.objects.filter(userId=user)
+                .order_by("created_at")
+                .values("userId", "payment_amount", "payment_method", "created_at")
             )
             # total per user
             total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
@@ -383,7 +409,6 @@ class SubsAnalyticViewset(ModelViewSet):
             final_result_dictionary["per_user"] = per_user
             for key, value in total_per_user.items():
                 final_result_dictionary[key] = value
-
 
             # append results to result
             response["result"].append(final_result_dictionary)
@@ -443,7 +468,7 @@ class SubscribeWithTelebirrViewSet(ModelViewSet):
 class SubscribersAnalytics(ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = subscriptionSerializer
-    
+
     http_method_names = ["get", "head"]
     pagination_class = MyPagination
 
@@ -461,10 +486,9 @@ class SubscribersAnalytics(ModelViewSet):
         print(list_of_users)
 
         unique_user_ids = list(set(list_of_users))
-        print('===================================>',unique_user_ids)
-        #response["count"] = unique_user_ids.__len__()
-        response["count"] = Subscription.objects.values(
-            "user_id").distinct().count()
+        print("===================================>", unique_user_ids)
+        # response["count"] = unique_user_ids.__len__()
+        response["count"] = Subscription.objects.values("user_id").distinct().count()
 
         response["result"] = []
         for user in unique_user_ids:
@@ -479,7 +503,7 @@ class SubscribersAnalytics(ModelViewSet):
             )
 
             # total per user
-            total_per_user =per_user.count()
+            total_per_user = per_user.count()
 
             # final result dictionary
             final_result_dictionary = {}

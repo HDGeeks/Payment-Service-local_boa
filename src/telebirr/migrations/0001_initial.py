@@ -5,74 +5,123 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Payment_info',
+            name="Payment_info",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('userId', models.CharField(blank=True, max_length=255)),
-                ('payment_amount', models.IntegerField(default=0)),
-                ('payment_method', models.CharField(blank=True, max_length=255)),
-                ('outTradeNo', models.CharField(blank=True, max_length=255)),
-                ('msisdn', models.CharField(blank=True, max_length=255)),
-                ('tradeNo', models.CharField(blank=True, max_length=255)),
-                ('transactionNo', models.CharField(blank=True, max_length=255)),
-                ('payment_state', models.CharField(choices=[('PENDING', 'pending'), ('COMPLETED', 'completed')], default='PENDING', max_length=9)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("userId", models.CharField(blank=True, max_length=255)),
+                ("payment_amount", models.IntegerField(default=0)),
+                ("payment_method", models.CharField(blank=True, max_length=255)),
+                ("outTradeNo", models.CharField(blank=True, max_length=255)),
+                ("msisdn", models.CharField(blank=True, max_length=255)),
+                ("tradeNo", models.CharField(blank=True, max_length=255)),
+                ("transactionNo", models.CharField(blank=True, max_length=255)),
+                (
+                    "payment_state",
+                    models.CharField(
+                        choices=[("PENDING", "pending"), ("COMPLETED", "completed")],
+                        default="PENDING",
+                        max_length=9,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['id'],
+                "ordering": ["id"],
             },
         ),
         migrations.CreateModel(
-            name='TrackRevenueRatePercentage',
+            name="TrackRevenueRatePercentage",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('rate', models.IntegerField(default=5)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("rate", models.IntegerField(default=5)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Purcahsed_track',
+            name="Purcahsed_track",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('userId', models.CharField(max_length=255)),
-                ('trackId', models.CharField(max_length=255)),
-                ('isPurcahsed', models.BooleanField(default=False)),
-                ('track_price_amount', models.IntegerField(default=0)),
-                ('payment_id', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='telebirr.payment_info')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("userId", models.CharField(max_length=255)),
+                ("trackId", models.CharField(max_length=255)),
+                ("isPurcahsed", models.BooleanField(default=False)),
+                ("track_price_amount", models.IntegerField(default=0)),
+                (
+                    "payment_id",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="telebirr.payment_info",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['id'],
+                "ordering": ["id"],
             },
         ),
         migrations.CreateModel(
-            name='Purcahsed_album',
+            name="Purcahsed_album",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('userId', models.CharField(max_length=255)),
-                ('albumId', models.CharField(max_length=255)),
-                ('isPurcahsed', models.BooleanField(default=False)),
-                ('album_price_amount', models.IntegerField(default=0)),
-                ('payment_id', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='telebirr.payment_info')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("userId", models.CharField(max_length=255)),
+                ("albumId", models.CharField(max_length=255)),
+                ("isPurcahsed", models.BooleanField(default=False)),
+                ("album_price_amount", models.IntegerField(default=0)),
+                (
+                    "payment_id",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="telebirr.payment_info",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['id'],
+                "ordering": ["id"],
             },
         ),
     ]

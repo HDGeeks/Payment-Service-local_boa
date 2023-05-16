@@ -73,9 +73,12 @@ def api_root(request, format=None):
             "subscription-fee-list": reverse(
                 "subscription-fee-list", request=request, format=format
             ),
-            "subs-payment-analytics": reverse("subs-payment-analytics-list", request=request, format=format),
-            "subscription-analytics": reverse("subscription-analytics-list", request=request, format=format),
-
+            "subs-payment-analytics": reverse(
+                "subs-payment-analytics-list", request=request, format=format
+            ),
+            "subscription-analytics": reverse(
+                "subscription-analytics-list", request=request, format=format
+            ),
             "schema-json": reverse("schema-json", request=request, format=format),
             # superapp
             "superApp-pay-with-super-app": reverse(
@@ -84,6 +87,8 @@ def api_root(request, format=None):
             "superAppcheck-superapp-payment": reverse(
                 "check-superapp-payment-list", request=request, format=format
             ),
-            "superapp_notify-url": reverse("super-app-notify-url", request=request, format=format)
+            "superapp_notify-url": reverse(
+                "super-app-notify-url", request=request, format=format
+            ),
         }
     )
