@@ -3,6 +3,7 @@ import environ
 
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import *
+from django.db.models import Q
 
 from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
@@ -465,56 +466,141 @@ class SubscribeWithTelebirrViewSet(ModelViewSet):
             )
 
 
-class SubscribersAnalytics(ModelViewSet):
-    queryset = Subscription.objects.all()
-    serializer_class = subscriptionSerializer
+# class SubscribersAnalytics(ModelViewSet):
+#     queryset = Subscription.objects.all()
+#     serializer_class = subscriptionSerializer
 
+#     http_method_names = ["get", "head"]
+#     pagination_class = MyPagination
+
+#     def list(self, request, *args, **kwargs):
+#         # The response object
+#         response = {}
+#         data = json.loads(
+#             json.dumps(super().list(request, *args, **kwargs).data["results"])
+#         )
+#         # list of user_ids
+#         list_of_users = []
+#         print(data)
+#         for item in data:
+#             list_of_users.append(item["user_id"])
+#         print(list_of_users)
+
+#         unique_user_ids = list(set(list_of_users))
+#         print("===================================>", unique_user_ids)
+#         # response["count"] = unique_user_ids.__len__()
+#         response["count"] = Subscription.objects.values("user_id").distinct().count()
+
+#         response["result"] = []
+#         for user in unique_user_ids:
+#             # get data from haile
+#             user_identity = get_identity(user)
+
+#             # Per user
+#             per_user = (
+#                 Subscription.objects.filter(user_id=user)
+#                 .order_by("created_at")
+#                 .values("id", "user_id", "sub_type", "subscription_date", "created_at")
+#             )
+
+#             # total per user
+#             total_per_user = per_user.count()
+
+#             # final result dictionary
+#             final_result_dictionary = {}
+#             # include user idntity in the dict
+#             for key, value in user_identity.items():
+#                 final_result_dictionary[key] = value
+#             # include per user in to dict
+#             final_result_dictionary["per_user"] = per_user
+#             # include total per user in to dict
+#             final_result_dictionary["total_per_user"] = total_per_user
+#             # append results to result
+#             response["result"].append(final_result_dictionary)
+
+#         return Response(response)
+
+
+class SubscribersAnalytics(ModelViewSet):
+    serializer_class = subscriptionSerializer
+    queryset = Subscription.objects.all()
     http_method_names = ["get", "head"]
     pagination_class = MyPagination
 
     def list(self, request, *args, **kwargs):
         # The response object
         response = {}
-        data = json.loads(
-            json.dumps(super().list(request, *args, **kwargs).data["results"])
-        )
-        # list of user_ids
-        list_of_users = []
-        print(data)
-        for item in data:
-            list_of_users.append(item["user_id"])
-        print(list_of_users)
 
-        unique_user_ids = list(set(list_of_users))
-        print("===================================>", unique_user_ids)
-        # response["count"] = unique_user_ids.__len__()
-        response["count"] = Subscription.objects.values("user_id").distinct().count()
+        # Get query parameters and set default values
+        payment_method = self.request.query_params.get("payment_method", None)
+        filter_query = Q()
+        if payment_method:
+            # Build filter query based on query parameters
+            #filter_query = Q()
+            if payment_method == "telebirr":
+                filter_query |= Q(payment_id__payment_method="telebirr")
+            elif payment_method == "Abysinia":
+                filter_query |= Q(payment_id__payment_method="Abysinia")
+            elif payment_method == "telebirr_superApp":
+                filter_query |= Q(payment_id_from_superapp__payment_method="telebirr_superApp")
+            else :
+                pass
 
+        # Get all subscriptions and apply filter query if it exists
+        subscriptions = Subscription.objects.all()
+        user_id_set = set()
+        for subscription in subscriptions:
+         
+            user_id_set.add(subscription.user_id)
+        distinct_user_count = len(user_id_set)
+        print('======================== >',sorted(user_id_set))
+     
+        if filter_query:
+            subscriptions = subscriptions.filter(filter_query)
+
+        subscriptions = self.paginate_queryset(subscriptions)
+        print('-------------------------------------',subscriptions)
+
+        # Count the number of distinct user IDs by iterating through the Subscription objects
+       
+       
+
+        # Build response
+        response["count"] = distinct_user_count
         response["result"] = []
-        for user in unique_user_ids:
-            # get data from haile
-            user_identity = get_identity(user)
+       
+        for user_id in sorted(user_id_set):
+          
+           # Get user identity
+            user_identity = get_identity(user_id)
 
-            # Per user
-            per_user = (
-                Subscription.objects.filter(user_id=user)
-                .order_by("created_at")
-                .values("id", "user_id", "sub_type", "subscription_date", "created_at")
-            )
+            # Get subscriptions for the user and apply filter query if it exists
+            per_user = Subscription.objects.filter(user_id=user_id)
+            if filter_query:
+                per_user = per_user.filter(filter_query).order_by('user_id')
 
-            # total per user
+            # Get total subscriptions for the user
             total_per_user = per_user.count()
 
-            # final result dictionary
+            # Build final result dictionary
             final_result_dictionary = {}
-            # include user idntity in the dict
             for key, value in user_identity.items():
                 final_result_dictionary[key] = value
-            # include per user in to dict
-            final_result_dictionary["per_user"] = per_user
-            # include total per user in to dict
+            final_result_dictionary["per_user"] = per_user.values(
+                "id", 
+                "user_id",
+                "sub_type",
+                "subscription_date",
+                "paid_until",
+                "payment_id__payment_method",
+                "payment_id_from_superapp__payment_method",
+                "created_at"
+            )
             final_result_dictionary["total_per_user"] = total_per_user
-            # append results to result
-            response["result"].append(final_result_dictionary)
 
+            # Append result to response
+            response["result"].append(final_result_dictionary)
+          
+           
+        #return self.get_paginated_response(response)
         return Response(response)
