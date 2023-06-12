@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "gift",
     "subscription",
     "super_app",
+    #"recurring",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

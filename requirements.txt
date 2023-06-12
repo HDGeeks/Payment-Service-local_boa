@@ -17,10 +17,9 @@ distlib==0.3.5
 Django
 django-cors-headers==3.13.0
 django-environ==0.9.0
-django-paypal==2.0
+
 djangorestframework==3.13.1
-drf-stripe==1.2.6
-drf-stripe-subscription==1.1.11
+
 drf-yasg==1.21.0
 exceptiongroup==1.0.0
 filelock==3.7.1
