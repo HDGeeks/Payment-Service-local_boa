@@ -16,6 +16,8 @@ from utilities.generate_nonce import generate_nonce
 from utilities.identity import get_identity
 from utilities.send_to_telebirr import send_to_telebirr
 from utilities.telebirrApi import Telebirr
+from django.db.models import Q
+
 
 from .models import (
     Payment_info,
@@ -427,23 +429,55 @@ class PurchsedTrackAnalytics(ModelViewSet):
     pagination_class = MyPagination
 
     def list(self, request, *args, **kwargs):
-        # The response object
+        # response dict
         response = {}
-        data = json.loads(
-            json.dumps(super().list(request, *args, **kwargs).data["results"])
-        )
-        # list of user_ids
-        list_of_users = []
-        for item in data:
-            list_of_users.append(item["userId"])
 
-        unique_user_ids = list(set(list_of_users))
+        # Get query parameters and set default values
+        payment_method = self.request.query_params.get("payment_method", None)
+        user = self.request.query_params.get("user", None)
 
-        # response["count"] = unique_user_ids.__len__()
-        response["count"] = Purcahsed_track.objects.values("userId").distinct().count()
+         # The multiple queries using Q 
+        filter_query = Q()
+        if payment_method:
+            # Build filter query based on query parameters
+            #filter_query = Q()
+            if payment_method == "telebirr":
+                filter_query |= Q(payment_id__payment_method="telebirr")
+            elif payment_method == "Abysinia":
+                filter_query |= Q(payment_id__payment_method="Abysinia")
+            elif payment_method == "telebirr_superApp":
+                filter_query |= Q(payment_id_from_superapp__payment_method="telebirr_superApp")
+            else :
+                pass
 
+         # Filter using user if it exists
+        if not user:
+            track_analytics = Purcahsed_track.objects.all()
+        else:
+            track_analytics = Purcahsed_track.objects.filter(userId=user)
+
+           # get unique users 
+        user_id_set = set()
+        for user in track_analytics:
+            user_id_set.add(user.userId)
+
+        distinct_user_count = len(user_id_set)
+
+          # if filter query exists , filter 
+        if filter_query:
+            track_analytics = track_analytics.filter(filter_query)
+
+        # apply pagination
+        track_analytics = self.paginate_queryset(track_analytics)
+        paginated_user_ids = self.paginate_queryset(list(user_id_set))
+
+        # Build response
+        response['count']=distinct_user_count
         response["result"] = []
-        for user in unique_user_ids:
+        
+
+       
+        for user in paginated_user_ids:
             # get data from haile
             user_identity = get_identity(user)
 
@@ -451,11 +485,9 @@ class PurchsedTrackAnalytics(ModelViewSet):
             per_user = (
                 Purcahsed_track.objects.filter(userId=user)
                 .order_by("created_at")
-                .values("id", "userId", "trackId", "track_price_amount", "created_at")
+                .values("id", "userId", "trackId", "track_price_amount","payment_id","created_at")
             )
-            per_user = Purcahsed_track.objects.filter(userId=user).values(
-                "userId", "trackId", "track_price_amount", "created_at"
-            )
+           
             # total per user
             total_per_user = per_user.aggregate(
                 total_per_user=Sum("track_price_amount")
@@ -474,4 +506,5 @@ class PurchsedTrackAnalytics(ModelViewSet):
             # append results to result
             response["result"].append(final_result_dictionary)
 
-        return Response(response)
+         # the final response
+        return self.get_paginated_response(response)

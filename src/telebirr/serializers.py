@@ -11,14 +11,15 @@ from .models import (
 class Purcahsed_track_serializer(serializers.ModelSerializer):
     class Meta:
         model = Purcahsed_track
-        fields = [
-            "id",
-            "userId",
-            "payment_id",
-            "trackId",
-            "track_price_amount",
-            "isPurcahsed",
-        ]
+        fields="__all__"
+        # fields = [
+        #     "id",
+        #     "userId",
+        #     "payment_id",
+        #     "trackId",
+        #     "track_price_amount",
+        #     "isPurcahsed",
+        # ]
 
 
 class Track_revenue_rate_serializer(serializers.ModelSerializer):
