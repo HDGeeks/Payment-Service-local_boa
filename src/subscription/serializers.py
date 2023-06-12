@@ -3,6 +3,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import datetime
 from dateutil.relativedelta import *
+from django.contrib.auth.models import User
 
 
 class Subscription_payment_serializer(ModelSerializer):
@@ -40,3 +41,9 @@ class subscriptionSerializer(ModelSerializer):
             "paid_until",
             "is_Subscriebed",
         ]
+
+class SearchsubscriptionSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email']
+       

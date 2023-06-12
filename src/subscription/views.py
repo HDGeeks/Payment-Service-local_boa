@@ -24,16 +24,27 @@ from utilities.generate_nonce import generate_nonce
 from super_app.models import Superapp_Payment_info
 from utilities.validate import subs_data
 
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import auth
+
 from .models import Subscription, Subscription_Payment_info, SubscriptionFee
 from .serializers import (
     Subscription_fee_serializer,
     Subscription_payment_serializer,
     subscriptionSerializer,
+    SearchsubscriptionSerializer,
 )
 
 # Initialise environment variables
 env = environ.Env()
 environ.Env.read_env(DEBUG=(bool, False))
+
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate(
+    "/Users/hd/Desktop/Zema/zema_new_local_boa/Payment-Service-local_boa/serviceAccountKey.json"
+)
+firebase_admin.initialize_app(cred)
 
 
 @api_view(
@@ -208,7 +219,7 @@ class SubscriptionViewset(ModelViewSet):
 
             try:
                 subs_data_saved = subs_data(request.data)
-            except Exception as e :
+            except Exception as e:
                 return Response(str(e))
 
             if request.data["sub_type"] == "MONTHLY":
@@ -285,9 +296,9 @@ class SubscriptionViewset(ModelViewSet):
 
             try:
                 subs_data_saved_normal = subs_data(request.data)
-            except Exception as e :
+            except Exception as e:
                 return Response(str(e))
-            
+
             if request.data["sub_type"] == "MONTHLY":
                 date = datetime.now()
                 new_paid_until_monthly = date + relativedelta(months=+1)
@@ -533,51 +544,62 @@ class SubscribersAnalytics(ModelViewSet):
 
         # Get query parameters and set default values
         payment_method = self.request.query_params.get("payment_method", None)
+        user = self.request.query_params.get("user", None)
         filter_query = Q()
         if payment_method:
             # Build filter query based on query parameters
-            #filter_query = Q()
+            # filter_query = Q()
             if payment_method == "telebirr":
                 filter_query |= Q(payment_id__payment_method="telebirr")
             elif payment_method == "Abysinia":
                 filter_query |= Q(payment_id__payment_method="Abysinia")
             elif payment_method == "telebirr_superApp":
-                filter_query |= Q(payment_id_from_superapp__payment_method="telebirr_superApp")
-            else :
+                filter_query |= Q(
+                    payment_id_from_superapp__payment_method="telebirr_superApp"
+                )
+            else:
                 pass
 
-        # Get all subscriptions and apply filter query if it exists
-        subscriptions = Subscription.objects.all()
+        if not user:
+            # Get all subscriptions and apply filter query if it exists
+            subscriptions = Subscription.objects.all()
+        else:
+            subscriptions = Subscription.objects.filter(user_id=user)
+
         user_id_set = set()
         for subscription in subscriptions:
-         
             user_id_set.add(subscription.user_id)
         distinct_user_count = len(user_id_set)
-        print('======================== >',sorted(user_id_set))
-     
+        print("======================== >", sorted(user_id_set))
+        # Paginate the user IDs
+        # paginated_user_ids = self.paginate_queryset(user_id_set, request)
+        subscriptions = self.paginate_queryset(subscriptions)
+        paginated_user_ids = self.paginate_queryset(list(user_id_set))
+
+        # # Filter subscriptions by user ID if user ID is specified
+        # if user_id:
+        #     subscriptions = subscriptions.filter(user_id=user_id)
+
         if filter_query:
             subscriptions = subscriptions.filter(filter_query)
 
         subscriptions = self.paginate_queryset(subscriptions)
-        print('-------------------------------------',subscriptions)
+        print("-------------------------------------", subscriptions)
 
         # Count the number of distinct user IDs by iterating through the Subscription objects
-       
-       
 
         # Build response
         response["count"] = distinct_user_count
         response["result"] = []
-       
-        for user_id in sorted(user_id_set):
-          
-           # Get user identity
+
+        for user_id in paginated_user_ids:
+            # Get user identity
             user_identity = get_identity(user_id)
 
             # Get subscriptions for the user and apply filter query if it exists
             per_user = Subscription.objects.filter(user_id=user_id)
             if filter_query:
-                per_user = per_user.filter(filter_query).order_by('user_id')
+                per_user = per_user.filter(filter_query).order_by("user_id")
 
             # Get total subscriptions for the user
             total_per_user = per_user.count()
@@ -587,20 +609,59 @@ class SubscribersAnalytics(ModelViewSet):
             for key, value in user_identity.items():
                 final_result_dictionary[key] = value
             final_result_dictionary["per_user"] = per_user.values(
-                "id", 
+                "id",
                 "user_id",
                 "sub_type",
                 "subscription_date",
                 "paid_until",
                 "payment_id__payment_method",
                 "payment_id_from_superapp__payment_method",
-                "created_at"
+                "created_at",
             )
             final_result_dictionary["total_per_user"] = total_per_user
 
             # Append result to response
             response["result"].append(final_result_dictionary)
-          
-           
-        #return self.get_paginated_response(response)
-        return Response(response)
+
+      
+        return self.get_paginated_response(response)
+        # return Response(response)
+
+
+class SearchSubsrcriptionViewset(ModelViewSet):
+    serializer_class = SearchsubscriptionSerializer
+    queryset = Subscription.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        email_id = self.request.query_params.get("email")
+        phone = self.request.query_params.get("phone")
+
+        if not email_id and not phone:
+            return Response("Provide email or phone number please .")
+
+        if email_id:
+            uid = get_user_id_by_email(email_id)
+            return Response(uid)
+
+        if phone:
+            uid = get_user_id_by_phone_number(phone)
+            return uid
+
+
+# Obtain a user ID using their email or phone number
+def get_user_id_by_email(email):
+    try:
+        user = auth.get_user_by_email(email)
+        print(f"User with email {email} has ID: {user.uid}")
+        return user.uid
+    except Exception as e:
+        print(f"Error getting user with email {email}: {e}")
+
+
+def get_user_id_by_phone_number(phone_number):
+    try:
+        user = auth.get_user_by_phone_number(phone_number)
+        print(f"User with phone number {phone_number} has ID: {user.uid}")
+        return user.uid
+    except Exception as e:
+        print(f"Error getting user with phone number {phone_number}: {e}")

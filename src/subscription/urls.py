@@ -7,6 +7,7 @@ from .views import (
     SubscriptionFeeViewset,
     SubsAnalyticViewset,
     subscribers_count,
+    SearchSubsrcriptionViewset
 )
 from rest_framework import routers
 from django.urls import path
@@ -24,6 +25,10 @@ router.register(
 )
 router.register(
     r"subscription-analytics", SubscribersAnalytics, basename="subscription-analytics"
+)
+router.register(
+    r"search",SearchSubsrcriptionViewset
+, basename="search"
 )
 router.register(
     r"subscribe_with_telebirr",
