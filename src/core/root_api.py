@@ -79,6 +79,9 @@ def api_root(request, format=None):
             "subscription-analytics": reverse(
                 "subscription-analytics-list", request=request, format=format
             ),
+              "search": reverse(
+                "search-list", request=request, format=format
+            ),
             "schema-json": reverse("schema-json", request=request, format=format),
             # superapp
             "superApp-pay-with-super-app": reverse(

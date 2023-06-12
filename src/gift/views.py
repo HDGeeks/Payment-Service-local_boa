@@ -8,12 +8,13 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.pagination import PageNumberPagination
+
 from utilities.pagination import MyPagination
 
 from utilities.generate_nonce import generate_nonce
 from utilities.identity import get_identity
 from utilities.send_to_telebirr import send_to_telebirr
+from django.db.models import Q
 
 from utilities.telebirrApi import Telebirr
 
@@ -162,57 +163,7 @@ class BuyGiftViewSet(ModelViewSet):
         return Response(Gift_Payment_info.objects.all().order_by("userId").values())
 
 
-class GiftAnalyticViewset(ModelViewSet):
-    queryset = Gift_Payment_info.objects.all()
-    serializer_class = Gift_payment_serializer
-    http_method_names = ["get", "head"]
-    pagination_class = MyPagination
 
-    def list(self, request, *args, **kwargs):
-        response = {}
-        data = json.loads(
-            json.dumps(super().list(request, *args, **kwargs).data["results"])
-        )
-        # list of user_ids
-        list_of_users = []
-        for item in data:
-            list_of_users.append(item["userId"])
-
-        unique_user_ids = list(set(list_of_users))
-
-        # response["count"] = unique_user_ids.__len__()
-        response["count"] = (
-            Gift_Payment_info.objects.values("userId").distinct().count()
-        )
-
-        response["result"] = []
-        for user in unique_user_ids:
-            # get data from haile
-            user_identity = get_identity(user)
-
-            # Per user
-            per_user = (
-                Gift_Payment_info.objects.filter(userId=user)
-                .order_by("created_at")
-                .values("userId", "payment_amount", "payment_method", "created_at")
-            )
-            # total per user
-            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
-
-            # final result dictionary
-            final_result_dictionary = {}
-            for key, value in user_identity.items():
-                final_result_dictionary[key] = value
-
-            # final_result_dictionary["user_identity"] = user_identity
-            final_result_dictionary["per_user"] = per_user
-            # new change
-            for key, value in total_per_user.items():
-                final_result_dictionary[key] = value
-            # append results to result
-            response["result"].append(final_result_dictionary)
-
-        return Response(response)
 
 
 class CoinViewset(ModelViewSet):
@@ -336,26 +287,91 @@ class GiveGiftArtistViewset(ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 
-# def send_to_telebirr(amount, nonce, outtrade):
-#     # Initialise environment variables
-#     env = environ.Env()
-#     environ.Env.read_env()
 
-#     telebirr = Telebirr(
-#         app_id=env("App_ID"),
-#         app_key=env("App_Key"),
-#         public_key=env("Public_Key"),
-#         notify_url="https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/gift/notify-url",
-#         receive_name="Zema Multimedia PLC ",
-#         return_url="https://zemamultimedia.com",
-#         short_code=env("Short_Code"),
-#         subject="Media content",
-#         timeout_express="30",
-#         total_amount=amount,
-#         nonce=nonce,
-#         out_trade_no=outtrade,
-#     )
+class GiftAnalyticViewset(ModelViewSet):
+    queryset = Gift_Payment_info.objects.all()
+    serializer_class = Gift_payment_serializer
+    http_method_names = ["get", "head"]
+    pagination_class = MyPagination
 
-#     return telebirr.send_request()
+    def list(self, request, *args, **kwargs):
+        # response dict
+        response = {}
+
+        # Get query parameters and set default values
+        payment_method = self.request.query_params.get("payment_method", None)
+        user = self.request.query_params.get("user", None)
+
+         # The multiple queries using Q 
+        filter_query = Q()
+        if payment_method:
+            # Build filter query based on query parameters
+            #filter_query = Q()
+            if payment_method == "telebirr":
+                filter_query |= Q(payment_id__payment_method="telebirr")
+            elif payment_method == "Abysinia":
+                filter_query |= Q(payment_id__payment_method="Abysinia")
+            elif payment_method == "telebirr_superApp":
+                filter_query |= Q(payment_id_from_superapp__payment_method="telebirr_superApp")
+            else :
+                pass
+
+         # Filter using user if it exists
+        if not user:
+            gift_analytics = Gift_Payment_info.objects.all()
+        else:
+            gift_analytics = Gift_Payment_info.objects.filter(userId=user)
+
+           # get unique users 
+        user_id_set = set()
+        for user in gift_analytics:
+            user_id_set.add(user.userId)
+
+        distinct_user_count = len(user_id_set)
+
+          # if filter query exists , filter 
+        if filter_query:
+            subscriptions = subscriptions.filter(filter_query)
+
+        # apply pagination
+        gift_analytics = self.paginate_queryset(gift_analytics)
+        paginated_user_ids = self.paginate_queryset(list(user_id_set))
+
+        # Build response
+        response['count']=distinct_user_count
+        response["result"] = []
+  
+        # loop through users
+        for user in paginated_user_ids:
+            # get data from haile
+            user_identity = get_identity(user)
+
+            # Per user
+            per_user = (
+                Gift_Payment_info.objects.filter(userId=user)
+                .order_by("created_at")
+                .values("userId", "payment_amount", "payment_method", "created_at")
+            )
+            # total per user
+            total_per_user = per_user.aggregate(total_per_user=Sum("payment_amount"))
+
+            # final result dictionary
+            final_result_dictionary = {}
+            for key, value in user_identity.items():
+                final_result_dictionary[key] = value
+
+            # final_result_dictionary["user_identity"] = user_identity
+            final_result_dictionary["per_user"] = per_user
+            # new change
+            for key, value in total_per_user.items():
+                final_result_dictionary[key] = value
+            # append results to result
+            response["result"].append(final_result_dictionary)
+
+         # the final response
+        return self.get_paginated_response(response)
+
+
