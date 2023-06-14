@@ -1,7 +1,7 @@
 import environ
 from django.db.models import Q
 from rest_framework.viewsets import ModelViewSet
-from stripe import Subscription
+from subscription.models import Subscription
 
 from subscription.serializers import subscriptionSerializer
 from utilities.identity import get_identity
