@@ -16,12 +16,7 @@ environ.Env.read_env(DEBUG=(bool, False))
 
 
 class SavePurchasePaymentViewSet(ModelViewSet):
-    """
-    This view make and external api call,
-    to telebirr platform ,
-    save the result and return
-    the data generated as json object
-    """
+  
 
     queryset = Payment_info.objects.all()
     serializer_class = Payment_info_serializer

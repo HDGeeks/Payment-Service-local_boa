@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    #hostname: hemisphere-back-db
+    image: postgres
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zemauser -d zemadb"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      POSTGRES_USER: zemauser
+      POSTGRES_DB: zemadb
+      POSTGRES_PASSWORD: zemauserdb1234
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  backend:
+    depends_on:
+      db:
+        condition: service_healthy
+      # condition: service_healthy
+    #hostname: hemisphere-back
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #command: sh -c "until pg_isready -h db -p 5432; do echo Waiting for PostgreSQL; sleep 1; done && python src/manage.py migrate --noinput && python src/manage.py runserver 0.0.0.0:8000"
+    ports:
+      - 8000:8000
+    environment:
+      - DB_HOST=db
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata:

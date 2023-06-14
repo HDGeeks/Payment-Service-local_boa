@@ -90,5 +90,5 @@ urlpatterns = [
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     path("openapi.yml", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     # Report Builde
-    re_path(r"^report_builder/", include("report_builder.urls")),
+    #re_path(r"^report_builder/", include("report_builder.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

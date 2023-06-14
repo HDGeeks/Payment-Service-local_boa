@@ -1,0 +1,20 @@
+# Ignore pycache and compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore version control files
+.git/
+.svn/
+
+# Ignore database and media files
+*.sqlite3
+/media
+
+# Ignore static files that can be generated during the build
+/staticfiles
+/node_modules
+
+/venv
+venv/

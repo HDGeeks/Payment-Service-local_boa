@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_yasg",
     #'storages',
-    "report_builder",
+    # "report_builder",
     "core",
     "gift",
     "subscription",
@@ -151,22 +151,20 @@ DATABASES = {
     }
 }
 
-# REST_FRAMEWORK = {
-#     'FORM_METHOD_OVERRIDE': None,
-#     'FORM_CONTENT_OVERRIDE': None,
-#     'FORM_CONTENTTYPE_OVERRIDE': None
-# }
-
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql_psycopg2",
-#         "NAME": "kinmusic-payment-database",
-#         "USER": "kinmusic-payment-database-user",
-#         "PASSWORD": "playground",
-#         "HOST": "10.74.0.5",
-#         "PORT": ""
+#         "NAME": "zemadb",
+#         "USER": "zemauser",
+#         # "HOST": "hemisphere-back-db",
+#         "HOST": os.getenv("DB_HOST", "localhost"),
+#         "PORT": 5432,
+#         "PASSWORD": "zemauserdb1234",
 #     }
 # }
+
+
+
 
 
 # Password validation
