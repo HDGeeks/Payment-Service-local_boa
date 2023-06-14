@@ -1,4 +1,5 @@
 from dateutil.relativedelta import *
+
 from django.db import models
 from django.forms import ValidationError
 import requests
@@ -6,6 +7,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from django.core.mail import send_mail
 from super_app.models import Superapp_Payment_info
+from telebirr.models import BoaWebhook
 
 
 class Abstarct(models.Model):
@@ -20,6 +22,8 @@ class Abstarct(models.Model):
 class SubscriptionFee(Abstarct):
     monthly_subscription_fee = models.IntegerField(null=False, blank=False, default=0)
     yearly_subscription_fee = models.IntegerField(null=False, blank=False, default=0)
+    daily_subscription_fee = models.IntegerField(null=False, blank=False, default=0)
+    weekly_subscription_fee = models.IntegerField(null=False, blank=False, default=0)
 
     def __str__(self) -> str:
         return f"Monthly fee : {self.monthly_subscription_fee} , Yearly_fee : {self.yearly_subscription_fee}"
@@ -30,6 +34,9 @@ class Subscription_Payment_info(Abstarct):
     userId = models.CharField(max_length=255, null=False, blank=True)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)
     payment_method = models.CharField(max_length=255, null=False, blank=True)
+    boa_webhook_id = models.ForeignKey(
+        BoaWebhook, on_delete=models.PROTECT, null=True, default=""
+    )
     outTradeNo = models.CharField(max_length=255, null=False, blank=True)
     msisdn = models.CharField(max_length=255, null=False, blank=True)
     tradeNo = models.CharField(max_length=255, null=False, blank=True)
@@ -46,6 +53,7 @@ class Subscription_Payment_info(Abstarct):
 
 
 class Subscription(Abstarct):
+    # SUBSCRIPTION_TYPE = (("MONTHLY", "monthly"), ("YEARLY", "yearly"))
     SUBSCRIPTION_TYPE = (
         ("DAILY", "daily"),
         ("WEEKLY", "weekly"),
@@ -82,7 +90,9 @@ class Subscription(Abstarct):
         super(Subscription, self).save(*args, **kwargs)
 
         try:
-            url = "https://kinideas-profile-dev-vdzflryflq-ew.a.run.app/subscribedUsers"
+            # url = "https://kinideas-profile-dev-vdzflryflq-ew.a.run.app/subscribedUsers"
+            url = "https://kinideas-profile.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/subscribedUsers"
+
             data = {"user_id": self.user_id, "subscription_type": self.sub_type}
 
             headers = {"Content-type": "application/json", "Accept": "application/json"}
@@ -113,4 +123,4 @@ class Subscription(Abstarct):
                 fail_silently=False,
             )
             with open("exception_track.txt", "a") as f:
-                return print(str(e), data, file=f)
+                return str(e)

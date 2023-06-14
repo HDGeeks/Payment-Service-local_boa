@@ -96,7 +96,8 @@ def VerifyWithRSA(
 ):
     if sign_type == "SHA256withRSA":
         decoded_signature = base64.b64decode(signature)
-        rsa_key = RSA.importKey(key)
+        key_bytes = b64decode(key.encode("utf-8"))
+        rsa_key = RSA.importKey(key_bytes)
         mesage_hash = SHA256.new(message.encode("utf-8"))
         verifier = pss.new(rsa_key)
         try:

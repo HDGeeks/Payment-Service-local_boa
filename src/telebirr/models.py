@@ -21,11 +21,41 @@ class Abstarct(models.Model):
         abstract = True
 
 
+class BoaWebhook(Abstarct):
+    data = models.JSONField()
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"The payment id is {self.pk}"
+
+
+# class BoaWebhookForDM(Abstarct):
+#     data = models.JSONField()
+
+#     class Meta:
+#        ordering = ['id']
+
+#     def __str__(self):
+#         return f'The payment id is {self.pk}'
+
+
+class TrackRevenueRatePercentage(Abstarct):
+    rate = models.FloatField(null=False, blank=False, default=5)
+
+    def __str__(self) -> str:
+        return f"The current revenue rate for track is {self.rate}"
+
+
 class Payment_info(Abstarct):
     PAYMENT_STATUS = (("PENDING", "pending"), ("COMPLETED", "completed"))
     userId = models.CharField(max_length=255, null=False, blank=True)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)
     payment_method = models.CharField(max_length=255, null=False, blank=True)
+    boa_webhook_id = models.ForeignKey(
+        BoaWebhook, on_delete=models.PROTECT, null=True, default=""
+    )
     outTradeNo = models.CharField(max_length=255, null=False, blank=True)
     msisdn = models.CharField(max_length=255, null=False, blank=True)
     tradeNo = models.CharField(max_length=255, null=False, blank=True)
@@ -41,13 +71,6 @@ class Payment_info(Abstarct):
         return f"payment_id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr"
 
 
-class TrackRevenueRatePercentage(Abstarct):
-    rate = models.IntegerField(null=False, blank=False, default=5)
-
-    def __str__(self) -> str:
-        return f"The current revenue rate for track is {self.rate}"
-
-
 class Purcahsed_track(Abstarct):
     userId = models.CharField(max_length=255, null=False, blank=False)
     trackId = models.CharField(max_length=255, null=False, blank=False)
@@ -56,6 +79,7 @@ class Purcahsed_track(Abstarct):
     payment_id = models.ForeignKey(Payment_info, on_delete=models.PROTECT)
 
     class Meta:
+        # unique_together = ('userId', 'trackId')
         ordering = ["id"]
 
     def check_userId(
@@ -71,7 +95,7 @@ class Purcahsed_track(Abstarct):
     def save(self, *args, **kwargs):
         super(Purcahsed_track, self).save(*args, **kwargs)
         try:
-            url = "http://music-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/webApp/purchasedtrack"
+            url = "https://music-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/webApp/purchasedtrack"
             data = {
                 "track_id": self.trackId,
                 "user_FUI": self.userId,
@@ -90,15 +114,9 @@ class Purcahsed_track(Abstarct):
             http.mount("http://", adapter)
 
             response = http.post(url, json=data, headers=headers)
+            print(response)
 
             return response
-            # if response.status_code == 201:
-            #     with open("success_track.txt", "a") as f:
-            #         return print(response, file=f)
-
-            # elif response.status_code is not 201:
-            #     with open("failure_track.txt", "a") as f:
-            #         return print(response, data, file=f)
 
         except BaseException as e:
             send_mail(
@@ -109,7 +127,7 @@ class Purcahsed_track(Abstarct):
                 fail_silently=False,
             )
             with open("exception_track.txt", "a") as f:
-                return print(str(e), data, file=f)
+                return str(e)
 
 
 class Purcahsed_album(Abstarct):
@@ -120,6 +138,7 @@ class Purcahsed_album(Abstarct):
     payment_id = models.ForeignKey(Payment_info, on_delete=models.PROTECT)
 
     class Meta:
+        # unique_together = ('userId', 'albumId')
         ordering = ["id"]
 
     def __str__(self):
@@ -128,7 +147,7 @@ class Purcahsed_album(Abstarct):
     def save(self, *args, **kwargs):
         super(Purcahsed_album, self).save(*args, **kwargs)
         try:
-            url = "http://music-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/webApp/purchasedalbum"
+            url = "https://music-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/webApp/purchasedalbum"
             data = {
                 "album_id": self.albumId,
                 "user_FUI": self.userId,
@@ -148,13 +167,6 @@ class Purcahsed_album(Abstarct):
 
             response = http.post(url, json=data, headers=headers)
 
-            # if response.status_code == 201:
-            #     with open("success_album.txt", "a") as f:
-            #         return print(response, file=f)
-
-            # elif response.status_code is not 201:
-            #     with open("failure_album.txt", "a") as f:
-            #         return print(response, file=f)
             return response
 
         except BaseException as e:
@@ -166,4 +178,4 @@ class Purcahsed_album(Abstarct):
                 fail_silently=False,
             )
             with open("exception_album.txt", "a") as f:
-                return print(str(e), file=f)
+                return str(e)

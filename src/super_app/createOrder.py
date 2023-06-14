@@ -21,7 +21,7 @@ class CreateOrderService:
         self.appSecret = appSecret
         self.merchantAppId = merchantAppId
         self.merchantCode = merchantCode
-        self.notify_path = "http://superapp.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/subscription/super-app-notify-url"
+        self.notify_path = "http://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/super/super-app-notify-url"
 
     def createOrder(self):
         merch_order_id = self.req["merch_order_id"]

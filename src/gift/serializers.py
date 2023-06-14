@@ -1,3 +1,5 @@
+from dataclasses import fields
+
 from rest_framework import serializers
 from .models import Gift_Payment_info, Gift_Info, Coin, Gift_Revenue_Rate
 
@@ -9,12 +11,19 @@ class Gift_payment_serializer(serializers.ModelSerializer):
             "userId",
             "payment_amount",
             "payment_method",
+            "boa_webhook_id",
             "outTradeNo",
             "msisdn",
             "tradeNo",
             "transactionNo",
             "payment_state",
         ]
+
+
+class Gift_revenue_rate_serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gift_Revenue_Rate
+        fields = "__all__"
 
 
 class Gift_info_serializer(serializers.ModelSerializer):
@@ -32,9 +41,3 @@ class Coin_info_serializer(serializers.ModelSerializer):
     class Meta:
         model = Coin
         fields = ["userId", "total_coin"]
-
-
-class Gift_revenue_rate_serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Gift_Revenue_Rate
-        fields = "__all__"

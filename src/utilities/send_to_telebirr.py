@@ -22,14 +22,11 @@ def send_to_telebirr(amount, nonce, outtrade, notify_type):
     else:
         return Response("No notify url provided for this operation .")
 
-    print(notify_url)
-    print(type(notify_type))
-
     telebirr = Telebirr(
         app_id=env("App_ID"),
         app_key=env("App_Key"),
         public_key=env("Public_Key"),
-        notify_url=notify_url,
+        notify_url=notify_url,  # "https://payment-service.calmgrass-743c6f7f.francecentral.azurecontainerapps.io/gift/notify-url",
         receive_name="Zema Multimedia PLC ",
         return_url="https://zemamultimedia.com",
         short_code=env("Short_Code"),

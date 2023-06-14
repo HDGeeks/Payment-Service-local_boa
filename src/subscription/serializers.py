@@ -1,9 +1,6 @@
 from .models import Subscription, Subscription_Payment_info, SubscriptionFee
 from rest_framework.serializers import ModelSerializer
-from rest_framework import serializers
-import datetime
 from dateutil.relativedelta import *
-from django.contrib.auth.models import User
 
 
 class Subscription_payment_serializer(ModelSerializer):
@@ -14,18 +11,13 @@ class Subscription_payment_serializer(ModelSerializer):
             "userId",
             "payment_amount",
             "payment_method",
+            "boa_webhook_id",
             "outTradeNo",
             "msisdn",
             "tradeNo",
             "transactionNo",
             "payment_state",
         ]
-
-
-class Subscription_fee_serializer(ModelSerializer):
-    class Meta:
-        model = SubscriptionFee
-        fields = "__all__"
 
 
 class subscriptionSerializer(ModelSerializer):
@@ -42,8 +34,8 @@ class subscriptionSerializer(ModelSerializer):
             "is_Subscriebed",
         ]
 
-class SearchsubscriptionSerializer(ModelSerializer):
+
+class Subscription_fee_serializer(ModelSerializer):
     class Meta:
-        model = User
-        fields = ['email']
-       
+        model = SubscriptionFee
+        fields = "__all__"

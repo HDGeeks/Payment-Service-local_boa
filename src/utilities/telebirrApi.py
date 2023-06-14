@@ -142,7 +142,6 @@ class Telebirr:
                 None,
             )
             decrypted += partial
-            print(decrypted)
 
         try:
             data_json = json.loads(decrypted)

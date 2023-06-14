@@ -1,9 +1,9 @@
-from rest_framework.pagination import PageNumberPagination, BasePagination
+from rest_framework.pagination import BasePagination
 from rest_framework.response import Response
 
 
-class MyPagination(BasePagination):
-    page_size = 4
+class SubscriptionPagination(BasePagination):
+    page_size = 10
     page_query_param = "page"
     max_page_size = "100"
 

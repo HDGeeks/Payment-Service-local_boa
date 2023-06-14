@@ -193,7 +193,7 @@ def notify(request):
                         merch_order_id=merch_order_id
                     ).update(payment_state="Pending")
 
-                if order_status == "Failure":
+                if order_status == "PAY_FAILED":
                     fetch_data = Superapp_Payment_info.objects.filter(
                         merch_order_id=merch_order_id
                     )

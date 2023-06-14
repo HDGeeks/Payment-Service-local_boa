@@ -1,6 +1,7 @@
 from http.client import OK
 from django.db import models
 from datetime import date
+from telebirr.models import BoaWebhook
 
 # Create your models here.
 
@@ -14,12 +15,20 @@ class Abstarct(models.Model):
         ordering = ["-created_at"]
 
 
+class Gift_Revenue_Rate(Abstarct):
+    rate = models.FloatField(null=False, blank=False, default=5)
+
+    def __str__(self) -> str:
+        return f"The current rate is {self.rate}"
+
+
 class Gift_Payment_info(Abstarct):
     PAYMENT_STATUS = (("PENDING", "PENDING"), ("COMPLETED", "COMPLETED"))
     userId = models.CharField(max_length=255)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)
     payment_method = models.CharField(max_length=255, null=False, blank=True)
-    outTradeNo = models.CharField(max_length=255, null=False, blank=True)
+    boa_webhook_id = models.ForeignKey(BoaWebhook, on_delete=models.PROTECT, null=True)
+    outTradeNo = models.CharField(max_length=255, null=False, blank=True, default="")
     msisdn = models.CharField(max_length=255, null=False, blank=True)
     tradeNo = models.CharField(max_length=255, null=False, blank=True)
     transactionNo = models.CharField(max_length=255, null=False, blank=True)
@@ -35,24 +44,6 @@ class Gift_Payment_info(Abstarct):
         return f"gift-id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr"
 
 
-class Coin(Abstarct):
-    userId = models.CharField(max_length=255, blank=True, null=False, primary_key=True)
-    total_coin = models.IntegerField(null=False, blank=False, default=0)
-
-    class Meta:
-        verbose_name = "Coin_Amount"
-
-    def __str__(self):
-        return f" The user {self.userId} has total coin {self.total_coin}"
-
-
-class Gift_Revenue_Rate(Abstarct):
-    rate = models.IntegerField(null=False, blank=False, default=5)
-
-    def __str__(self) -> str:
-        return f"The current rate is {self.rate}"
-
-
 class Gift_Info(Abstarct):
     ArtistId = models.CharField(max_length=255, null=False, blank=False)
     gift_amount = models.IntegerField(null=False, blank=False, default=0)
@@ -64,3 +55,14 @@ class Gift_Info(Abstarct):
 
     def __str__(self):
         return f"{self.userId} gifted to  {self.ArtistId} at {self.created_at}"
+
+
+class Coin(Abstarct):
+    userId = models.CharField(max_length=255, blank=True, null=False, primary_key=True)
+    total_coin = models.IntegerField(null=False, blank=False, default=0)
+
+    class Meta:
+        verbose_name = "Coin_Amount"
+
+    def __str__(self):
+        return f" The user {self.userId} has total coin {self.total_coin}"
