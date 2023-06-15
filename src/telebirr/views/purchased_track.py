@@ -6,20 +6,12 @@ from rest_framework.viewsets import ModelViewSet
 
 from telebirr.models import Payment_info, Purcahsed_track
 from telebirr.serializers import Purcahsed_track_serializer
+from utilities.custom_pagination import CustomPagination
 
-
-# Initialise environment variables
-env = environ.Env()
-environ.Env.read_env(DEBUG=(bool, False))
 
 
 class PurchasedTracksViewset(ModelViewSet):
-    """
-    check the request data ,
-    check the notify url and its results ,
-    update the subscription model is subscribed field true
-
-    """
+    
 
     serializer_class = Purcahsed_track_serializer
     queryset = Purcahsed_track.objects.all()
@@ -53,7 +45,15 @@ class PurchasedTracksViewset(ModelViewSet):
                 )
 
         else:
-            return Response(Purcahsed_track.objects.all().values())
+            # use queryset directly without calling values()
+            page = self.paginate_queryset(self.queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(self.queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
     def create(self, request, *args, **kwargs):
         verify_amount = Payment_info.objects.filter(

@@ -23,6 +23,16 @@ class PurchaseAnalyticViewset(ModelViewSet):
         payment_method = self.request.query_params.get("payment_method", None)
         user = self.request.query_params.get("user", None)
 
+         # Filter using user if it exists
+        queryset = self.queryset
+
+        if user:
+            queryset = queryset.filter(userId=user)
+
+         # Handle empty queryset
+        if not queryset.exists():
+            return self.get_paginated_response({"count": 0, "result": []})
+
         # The multiple queries using Q
         filter_query = Q()
         if payment_method:
@@ -38,16 +48,10 @@ class PurchaseAnalyticViewset(ModelViewSet):
             else:
                 pass
 
-        # Filter using user if it exists
-        queryset = self.queryset
-
-        if user:
-            queryset = queryset.filter(userId=user)
+       
 
         
-        # Handle empty queryset
-        if not queryset.exists():
-            return self.get_paginated_response({"count": 0, "result": []})
+       
         
         # for postgre
         # Get a list of unique user ids

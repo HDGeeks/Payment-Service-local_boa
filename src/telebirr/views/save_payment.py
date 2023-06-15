@@ -1,25 +1,17 @@
-import environ
 from rest_framework import status
-
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-
 from telebirr.models import Payment_info
 from telebirr.serializers import Payment_info_serializer
-
-
-# Initialise environment variables
-env = environ.Env()
-environ.Env.read_env(DEBUG=(bool, False))
+from utilities.custom_pagination import CustomPagination
 
 
 class SavePurchasePaymentViewSet(ModelViewSet):
-  
-
     queryset = Payment_info.objects.all()
     serializer_class = Payment_info_serializer
+    pagination_class = CustomPagination
 
     def create(self, request, *args, **kwargs):
         if request.data["payment_method"] == "telebirr":
@@ -27,17 +19,23 @@ class SavePurchasePaymentViewSet(ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
-        # this is haile code
-
         user = self.request.query_params.get("user")
+        queryset = self.queryset.order_by("-created_at")  # apply ordering here
+
         if user:
             try:
-                user_obj = Payment_info.objects.filter(userId=user).values(
-                    "id", "userId", "payment_amount"
-                )
+                user_obj = queryset.filter(userId=user)
             except Payment_info.DoesNotExist:
-                raise NotFound("Record does not exist for this user .")
+                raise NotFound("Record does not exist for this user.")
 
-            return Response(user_obj, status=status.HTTP_200_OK)
+            serializer = self.get_serializer(user_obj, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        return Response(self.queryset.values(), status=status.HTTP_200_OK)
+        # use queryset directly without calling values()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
