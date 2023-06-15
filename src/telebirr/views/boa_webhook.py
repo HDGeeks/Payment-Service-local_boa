@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import NotFound
 from django.shortcuts import redirect
+from utilities.custom_pagination import CustomPagination
 
 
 class BoaWebhookViewset(ModelViewSet):
@@ -24,8 +25,19 @@ class BoaWebhookViewset(ModelViewSet):
                 raise NotFound("Record does not exist for this user .")
 
             return Response(result, status=status.HTTP_200_OK)
+        else:
+               # use queryset directly without calling values()
+            page = self.paginate_queryset(self.queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
 
-        return Response(self.queryset.values(), status=status.HTTP_200_OK)
+            serializer = self.get_serializer(self.queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+       
+
+
 
     def create(self, request, *args, **kwargs):
         payload = {"data": request.data}

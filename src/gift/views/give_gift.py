@@ -33,11 +33,16 @@ class GiveGiftArtistViewset(ModelViewSet):
             result = {"ArtistId": artist, "total": total_gift, "tippers": res}
             return Response(result)
         else:
-            return Response(
-                Gift_Info.objects.all().values(
-                    "id", "userId", "ArtistId", "gift_amount"
-                )
-            )
+               # use queryset directly without calling values()
+            page = self.paginate_queryset(self.queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(self.queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+       
 
     def create(self, request, *args, **kwargs):
         # find the coin available per user

@@ -17,13 +17,6 @@ from gift.serializers import Gift_payment_serializer
 
 class TelebirrGiftPaymentViewset(ModelViewSet):
 
-    """
-    This view make and external api call,
-    to telebirr platform ,
-    save the result and return
-    the data generated as json object
-    """
-
     queryset = Gift_Payment_info.objects.all()
     serializer_class = Gift_payment_serializer
 

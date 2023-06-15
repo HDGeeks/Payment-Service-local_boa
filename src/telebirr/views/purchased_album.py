@@ -1,27 +1,13 @@
-import environ
-
-
 from rest_framework import status
-
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from telebirr.models import Purcahsed_album, Payment_info
+from telebirr.models import Payment_info, Purcahsed_album
 from telebirr.serializers import Purcahsed_album_serializer
 
 
-# Initialise environment variables
-env = environ.Env()
-environ.Env.read_env(DEBUG=(bool, False))
-
-
 class PurchasedAlbumsViewset(ModelViewSet):
-    """
-    check the request data ,
-    check the notify url and its results ,
-    update the subscription model is subscribed field true
-
-    """
+  
 
     serializer_class = Purcahsed_album_serializer
     queryset = Purcahsed_album.objects.all()

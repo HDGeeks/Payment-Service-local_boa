@@ -8,6 +8,7 @@ from rest_framework.viewsets import ModelViewSet
 class BoaWebhookForDMViewset(ModelViewSet):
     serializer_class = Boa_Webhook_serializer
     queryset = BoaWebhook.objects.all()
+    
 
     def list(self, request, *args, **kwargs):
         return Response(
