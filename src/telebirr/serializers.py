@@ -1,5 +1,6 @@
 from dataclasses import fields
 from rest_framework import serializers
+from utilities.identity import get_identity
 from .models import (
     Purcahsed_album,
     Purcahsed_track,
@@ -43,6 +44,8 @@ class Purcahsed_album_serializer(serializers.ModelSerializer):
 
 
 class Payment_info_serializer(serializers.ModelSerializer):
+    user_detail = serializers.SerializerMethodField()
+
     class Meta:
         model = Payment_info
         fields = [
@@ -56,7 +59,19 @@ class Payment_info_serializer(serializers.ModelSerializer):
             "tradeNo",
             "transactionNo",
             "payment_state",
+            "user_detail",
         ]
+
+    def get_user_detail(self, obj):
+        userId = obj.userId
+        user_detail = {}
+        try:
+            user = get_identity(userId)
+            user_detail["name"] = user["display_name"]
+            user_detail["identifier"] = user["identifier"]
+        except:
+            user_detail = "Detail Not found."
+        return user_detail
 
 
 class Boa_Webhook_serializer(serializers.ModelSerializer):
