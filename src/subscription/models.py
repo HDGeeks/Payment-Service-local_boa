@@ -10,8 +10,8 @@ from super_app.models import Superapp_Payment_info
 from telebirr.models import BoaWebhook
 
 
-class Abstarct(models.Model):
-    created_at = models.DateTimeField(auto_now=True)
+class Abstract(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -19,7 +19,7 @@ class Abstarct(models.Model):
         ordering = ["-created_at"]
 
 
-class SubscriptionFee(Abstarct):
+class SubscriptionFee(Abstract):
     monthly_subscription_fee = models.IntegerField(null=False, blank=False, default=0)
     yearly_subscription_fee = models.IntegerField(null=False, blank=False, default=0)
     daily_subscription_fee = models.IntegerField(null=False, blank=False, default=0)
@@ -29,7 +29,7 @@ class SubscriptionFee(Abstarct):
         return f"Monthly fee : {self.monthly_subscription_fee} , Yearly_fee : {self.yearly_subscription_fee}"
 
 
-class Subscription_Payment_info(Abstarct):
+class Subscription_Payment_info(Abstract):
     PAYMENT_STATUS = (("PENDING", "pending"), ("COMPLETED", "completed"))
     userId = models.CharField(max_length=255, null=False, blank=True)
     payment_amount = models.IntegerField(null=False, blank=False, default=0)
@@ -52,7 +52,7 @@ class Subscription_Payment_info(Abstarct):
         return f"payment_id = {self.pk} user_id={self.userId}, amount= {self.payment_amount} birr"
 
 
-class Subscription(Abstarct):
+class Subscription(Abstract):
     # SUBSCRIPTION_TYPE = (("MONTHLY", "monthly"), ("YEARLY", "yearly"))
     SUBSCRIPTION_TYPE = (
         ("DAILY", "daily"),
