@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
     "telebirr",
     "corsheaders",
     "rest_framework",
@@ -150,6 +151,7 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # DATABASES = {
 #     "default": {

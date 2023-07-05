@@ -21,5 +21,5 @@ def get_identity(user):
     try:
         response = http.get(url, headers=headers)
     except Exception as e:
-        return response(str(e))
+        return str(e)
     return response.json()

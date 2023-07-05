@@ -8,7 +8,11 @@ media
 
 # Backup files # 
 *.bak 
-
+static
+/static
+.static
+/src/static
+src/static
 # If you are using PyCharm # 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -135,3 +139,5 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
+src.static
